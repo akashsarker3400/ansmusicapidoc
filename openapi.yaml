@@ -672,7 +672,7 @@ components:
 
     ReleaseInput:
       type: object
-      required: [title, primaryArtist, videoUrl]
+      required: [title, primaryArtist, videoUrl, imageUrl, label, genre, language, description, channel]
       properties:
         externalId: { type: string, description: Your own id. Unique per account. }
         title: { type: string }
@@ -686,8 +686,9 @@ components:
         releaseDate: { type: string, format: date-time, description: Must carry a timezone. Absent means as soon as approved. }
         isrc: { type: string, description: Yours, if you have one. Dashes and spaces are stripped. }
         channel: { type: string, description: VEVO channel name. }
+        visibility: { type: string, enum: [public, unlisted], default: public }
         explicit: { type: boolean }
-        description: { type: string }
+        description: { type: string, maxLength: 5000 }
         keywords: { $ref: "#/components/schemas/StringList" }
         composer: { type: string }
         producer: { type: string }
@@ -696,7 +697,7 @@ components:
         copyrightYear: { type: string }
 
     ReleasePatch:
-      description: Any of the creation fields except `externalId`. At least one.
+      description: Any of the creation fields except `externalId`. At least one. A required field can be changed but not emptied.
       type: object
       minProperties: 1
       properties:
@@ -711,8 +712,9 @@ components:
         releaseDate: { type: string, format: date-time }
         isrc: { type: string, description: Only while the release has none. }
         channel: { type: string }
+        visibility: { type: string, enum: [public, unlisted] }
         explicit: { type: boolean }
-        description: { type: string }
+        description: { type: string, maxLength: 5000 }
         keywords: { $ref: "#/components/schemas/StringList" }
         composer: { type: string }
         producer: { type: string }
@@ -750,6 +752,7 @@ components:
         musicDirector: { type: [string, "null"] }
         copyrightYear: { type: [string, "null"] }
         explicit: { type: [boolean, "null"] }
+        visibility: { type: string, enum: [public, unlisted] }
         imageUrl: { type: [string, "null"], format: uri }
         environment: { type: string, enum: [live, test] }
         createdAt: { type: string, format: date-time }

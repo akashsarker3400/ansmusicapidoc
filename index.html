@@ -272,7 +272,7 @@ curl -X PUT <span class="s">"$UPLOAD_URL"</span> -H <span class="s">"content-typ
         </li>
         <li>
           <b>Create the release</b>
-          <p>Three fields are required: <code>title</code>, <code>primaryArtist</code>, <code>videoUrl</code>. Send your own <code>externalId</code> so a retry can never create it twice.</p>
+          <p>Nine fields are required — title, artist, the two files, label, genre, language, description and the VEVO channel. Send your own <code>externalId</code> so a retry can never create it twice.</p>
           <div class="code"><pre><code>curl -X POST https://server.ansmusic.io/partner/releases \
   -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
   -d <span class="s">'{
@@ -282,6 +282,8 @@ curl -X PUT <span class="s">"$UPLOAD_URL"</span> -H <span class="s">"content-typ
     "label":         "Sundarban Records",
     "genre":         ["Pop"],
     "language":      "Bengali",
+    "description":   "Official music video.",
+    "channel":       "NadiaRainVEVO",
     "releaseDate":   "2026-10-01T12:00:00Z",
     "videoUrl":      "https://cdn.ansmusic.io/uploads/videos/…mp4",
     "imageUrl":      "https://cdn.ansmusic.io/uploads/images/image/…jpg"
@@ -511,6 +513,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   <span class="k">"musicDirector"</span>:     <span class="n">null</span>,
   <span class="k">"copyrightYear"</span>:     <span class="s">"2026"</span>,
   <span class="k">"explicit"</span>:          <span class="n">false</span>,
+  <span class="k">"visibility"</span>:        <span class="s">"public"</span>,
   <span class="k">"imageUrl"</span>:          <span class="s">"https://cdn.ansmusic.io/uploads/images/image/…"</span>,
   <span class="k">"environment"</span>:       <span class="s">"live"</span>,
   <span class="k">"createdAt"</span>:         <span class="s">"2026-09-15T10:04:30.034Z"</span>,
@@ -541,6 +544,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
           <tr><td><code>language</code> … <code>copyrightYear</code></td><td class="type">string | null</td><td>The descriptive fields, returned as we hold them.</td></tr>
           <tr><td><code>keywords</code></td><td class="type">string[]</td><td></td></tr>
           <tr><td><code>explicit</code></td><td class="type">boolean | null</td><td>Null when nobody has said.</td></tr>
+          <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td>Where it is listed once live.</td></tr>
           <tr><td><code>imageUrl</code></td><td class="type">url | null</td><td>The cover art as stored.</td></tr>
           <tr><td><code>environment</code></td><td class="type">"live" | "test"</td><td>Which world this landed in. A test release is real but reaches no reviewer or store.</td></tr>
           <tr><td><code>createdAt</code>, <code>updatedAt</code></td><td class="type">ISO 8601</td><td><code>updatedAt</code> is what <code>updatedSince</code> compares against.</td></tr>
@@ -569,8 +573,10 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
     "label":            "Sundarban Records",
     "genre":            ["Pop"],
     "language":         "Bengali",
+    "description":      "Official music video.",
     "releaseDate":      "2026-10-01T12:00:00Z",
     "channel":          "NadiaRainVEVO",
+    "visibility":       "public",
     "explicit":         false,
     "videoUrl":         "https://cdn.ansmusic.io/uploads/videos/yourco-master-a1b2c3.mp4",
     "imageUrl":         "https://cdn.ansmusic.io/uploads/images/image/yourco-cover-d4e5f6.jpg"
@@ -586,6 +592,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
     label: <span class="s">'Sundarban Records'</span>,
     genre: [<span class="s">'Pop'</span>],
     language: <span class="s">'Bengali'</span>,
+    description: <span class="s">'Official music video.'</span>,
     releaseDate: <span class="s">'2026-10-01T12:00:00Z'</span>,
     channel: <span class="s">'NadiaRainVEVO'</span>,
     explicit: <span class="n">false</span>,
@@ -607,6 +614,7 @@ console.log(statusCode, message, data.id, data.videoId, data.status);</code></pr
         <span class="s">"label"</span>: <span class="s">"Sundarban Records"</span>,
         <span class="s">"genre"</span>: [<span class="s">"Pop"</span>],
         <span class="s">"language"</span>: <span class="s">"Bengali"</span>,
+        <span class="s">"description"</span>: <span class="s">"Official music video."</span>,
         <span class="s">"releaseDate"</span>: <span class="s">"2026-10-01T12:00:00Z"</span>,
         <span class="s">"channel"</span>: <span class="s">"NadiaRainVEVO"</span>,
         <span class="s">"explicit"</span>: <span class="n">False</span>,
@@ -630,6 +638,8 @@ curl_setopt_array(<span class="k">$ch</span>, [
     <span class="s">'label'</span>         =&gt; <span class="s">'Sundarban Records'</span>,
     <span class="s">'genre'</span>         =&gt; [<span class="s">'Pop'</span>],
     <span class="s">'language'</span>      =&gt; <span class="s">'Bengali'</span>,
+    <span class="s">'description'</span>   =&gt; <span class="s">'Official music video.'</span>,
+    <span class="s">'channel'</span>       =&gt; <span class="s">'NadiaRainVEVO'</span>,
     <span class="s">'releaseDate'</span>   =&gt; <span class="s">'2026-10-01T12:00:00Z'</span>,
     <span class="s">'videoUrl'</span>      =&gt; <span class="k">$fileUrl</span>,
     <span class="s">'imageUrl'</span>      =&gt; <span class="k">$coverUrl</span>,
@@ -640,6 +650,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
           </div>
 
           <p><strong>Returns</strong> <code>201</code> with the release under <code>data</code>, <code>status: "pending"</code>. On a live key the message is <em>Release received and queued for review</em>; on a test key it says the release is visible through this API only.</p>
+          <p><strong>Nine fields are required</strong> — everything a music video cannot be delivered without. A request missing several is refused once, naming all of them: <em>Missing required fields: label, genre, channel</em>. This is the same bar the ANS Music dashboard sets before an artist can press Publish; a release that arrived without them would only be sent back, and lose its date.</p>
 
           <div class="tw" style="margin:0"><table>
             <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
@@ -647,17 +658,18 @@ curl_setopt_array(<span class="k">$ch</span>, [
               <tr><td><code>title</code></td><td class="type">string</td><td><span class="req">required</span></td><td>Trimmed.</td></tr>
               <tr><td><code>primaryArtist</code></td><td class="type">string[]</td><td><span class="req">required</span></td><td>At least one name. A comma-separated string works too.</td></tr>
               <tr><td><code>videoUrl</code></td><td class="type">url</td><td><span class="req">required</span></td><td>The <code>fileUrl</code> from an upload, or a public URL you host. <code>video</code> is accepted as an alias.</td></tr>
-              <tr><td><code>externalId</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Your own id. Unique per account. See <a href="#idempotency">idempotency</a>.</td></tr>
-              <tr><td><code>imageUrl</code></td><td class="type">url</td><td><span class="opt">optional</span></td><td>Cover art. <code>image</code> and <code>thumbnail</code> are accepted as aliases. See <a href="#media-spec">media requirements</a>.</td></tr>
+              <tr><td><code>imageUrl</code></td><td class="type">url</td><td><span class="req">required</span></td><td>Cover art — the thumbnail the video is shown with. <code>image</code> and <code>thumbnail</code> are accepted as aliases. See <a href="#media-spec">media requirements</a>.</td></tr>
+              <tr><td><code>label</code></td><td class="type">string</td><td><span class="req">required</span></td><td>The label the release belongs to.</td></tr>
+              <tr><td><code>genre</code></td><td class="type">string[]</td><td><span class="req">required</span></td><td>At least one. Your words; we map them to each store's own list at review.</td></tr>
+              <tr><td><code>language</code></td><td class="type">string</td><td><span class="req">required</span></td><td>What it is sung in.</td></tr>
+              <tr><td><code>description</code></td><td class="type">string</td><td><span class="req">required</span></td><td>Shown on the video. Up to 5,000 characters.</td></tr>
+              <tr><td><code>channel</code></td><td class="type">string</td><td><span class="req">required</span></td><td>The VEVO channel name it goes to. Request one first if you do not have it — see <a href="#channels">Channels</a>.</td></tr>
+              <tr><td><code>externalId</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Your own id. Unique per account. See <a href="#idempotency">idempotency</a>. Strongly recommended.</td></tr>
               <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
-              <tr><td><code>label</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The label the release belongs to.</td></tr>
-              <tr><td><code>genre</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Your words. We map them to each store's own list at review.</td></tr>
-              <tr><td><code>language</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>What it is sung in.</td></tr>
               <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>Must carry a timezone — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
               <tr><td><code>isrc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Yours if you have one; dashes and spaces are stripped, case is upper-cased. Left out, we issue one at approval and tell you.</td></tr>
-              <tr><td><code>channel</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The VEVO channel name it should go to. See <a href="#channels">Channels</a>.</td></tr>
+              <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td><span class="opt">optional</span></td><td>Where the video is listed once live. Default <code>public</code> — listed on both YouTube and VEVO.</td></tr>
               <tr><td><code>explicit</code></td><td class="type">boolean</td><td><span class="opt">optional</span></td><td>Whether the content is explicit.</td></tr>
-              <tr><td><code>description</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Shown on the video.</td></tr>
               <tr><td><code>keywords</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
               <tr><td><code>composer</code>, <code>producer</code>, <code>editor</code>, <code>musicDirector</code>, <code>copyrightYear</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Credits, as free text.</td></tr>
             </tbody>
@@ -734,7 +746,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
               <tr><td><span class="pill bad">rejected</span> <span class="pill bad">taken_down</span></td><td><code>409</code>. These are closed doors. A rejected release cannot be edited or resubmitted; create a new one. For a takedown, write to support.</td></tr>
             </tbody>
           </table></div>
-          <p class="muted small"><code>primaryArtist</code> cannot be emptied. An ISRC, once present — issued by us or supplied by you — cannot be changed (<code>409</code>); it is the recording's name. Sending one is allowed only while the release has none.</p>
+          <p class="muted small">A required field can be changed but not emptied — <code>label cannot be emptied</code>. An ISRC, once present — issued by us or supplied by you — cannot be changed (<code>409</code>); it is the recording's name. Sending one is allowed only while the release has none.</p>
         </div>
       </div>
 
@@ -1065,7 +1077,7 @@ handle(<span class="k">$evt</span>);</code></pre>
       <div class="tw"><table>
         <thead><tr><th class="num">Code</th><th>Means</th><th>Examples</th></tr></thead>
         <tbody>
-          <tr><td class="num">400</td><td>Something in the request. The message says what.</td><td><em>title is required · primaryArtist is required · The webhook URL must be https. · status must be one of: … · Nothing to change — send at least one field.</em></td></tr>
+          <tr><td class="num">400</td><td>Something in the request. The message says what.</td><td><em>Missing required fields: label, genre, channel · description is required · label cannot be emptied · The webhook URL must be https. · status must be one of: … · Nothing to change — send at least one field.</em></td></tr>
           <tr><td class="num">401</td><td>Key missing, wrong, or revoked.</td><td><em>API key is required · Invalid API key · This API key has been revoked.</em></td></tr>
           <tr><td class="num">403</td><td>Key lacks the scope, is not permitted from this address, or is a live key on a test-only route.</td><td><em>This API key is not permitted from this address. · Only a test key can do this.</em></td></tr>
           <tr><td class="num">404</td><td>Not yours, or not there — including a release from the other environment.</td><td><em>Release not found · Test release not found</em></td></tr>
@@ -1135,6 +1147,8 @@ handle(<span class="k">$evt</span>);</code></pre>
       <div class="log">
         <div class="entry"><time>16 September 2026</time>
           <ul>
+            <li><strong>Changed:</strong> <code>POST /releases</code> requires nine fields — <code>imageUrl</code>, <code>label</code>, <code>genre</code>, <code>language</code>, <code>description</code> and <code>channel</code> join the original three. A release without them cannot be delivered and was only ever sent back. A request missing several is refused once, naming all of them.</li>
+            <li><strong>New:</strong> <code>visibility</code> (<code>public</code> | <code>unlisted</code>) on create and update, returned on reads. Default public.</li>
             <li><strong>Changed:</strong> rate limits lowered to match real use, and a ceiling of 300 calls a minute across all routes added. See <a href="#rate-limits">Rate limits</a>. A client inside the old limits and outside the new ones was already in a loop.</li>
           </ul>
         </div>

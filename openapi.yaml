@@ -1,0 +1,800 @@
+openapi: 3.1.0
+info:
+  title: ANS Music Partner API
+  version: "1.0"
+  summary: Deliver music video releases to ANS Music from your own system.
+  description: |
+    Push releases, follow every status change with signed webhooks, and request
+    VEVO channels. Every response is one envelope: `{ statusCode, success,
+    message, data }`. Human-readable documentation: https://apidoc.ansmusic.io
+  contact:
+    name: ANS Music support
+    email: support@ansmusic.io
+    url: https://apidoc.ansmusic.io
+  termsOfService: https://ansbackstage.com/auth/terms-conditions
+servers:
+  - url: https://server.ansmusic.io/partner
+    description: Live and test — the key decides the environment.
+security:
+  - apiKey: []
+tags:
+  - name: Identity
+  - name: Uploads
+    description: Presigned URLs straight to storage. Files never pass through the API.
+  - name: Releases
+  - name: Sandbox
+    description: Test keys only.
+  - name: Channels
+  - name: Webhooks
+
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      summary: Who this key is
+      description: Needs no scope. The call to put in a health check.
+      responses:
+        "200":
+          description: The key's company, environment, scopes and linked account.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Me"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /uploads:
+    post:
+      tags: [Uploads]
+      summary: Start an upload
+      description: |
+        Returns a presigned URL for a single PUT when `size` is 50 MB or under,
+        and a multipart upload otherwise. An absent `size` is treated as large.
+        Signed URLs are valid for one hour.
+      x-scope: upload:write
+      x-rate-limit: 120/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileName]
+              properties:
+                fileName: { type: string, example: master.mp4 }
+                category: { type: string, enum: [video, image], default: video }
+                contentType: { type: string, example: video/mp4 }
+                size: { type: integer, description: Bytes., example: 1873000000 }
+      responses:
+        "200":
+          description: Where to put the bytes, and the URL they will have.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: "#/components/schemas/UploadSingle"
+                          - $ref: "#/components/schemas/UploadMultipart"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /uploads/parts:
+    post:
+      tags: [Uploads]
+      summary: Sign multipart parts
+      description: At most 200 part numbers per request. Ask a block at a time.
+      x-scope: upload:write
+      x-rate-limit: 600/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, uploadId, partNumbers]
+              properties:
+                key: { type: string }
+                uploadId: { type: string }
+                partNumbers:
+                  type: array
+                  items: { type: integer, minimum: 1 }
+                  maxItems: 200
+      responses:
+        "200":
+          description: One presigned PUT URL per part.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          urls:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                partNumber: { type: integer }
+                                uploadUrl: { type: string, format: uri }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /uploads/complete:
+    post:
+      tags: [Uploads]
+      summary: Finish a multipart upload
+      description: Parts may be sent in any order; quotes around an ETag are stripped.
+      x-scope: upload:write
+      x-rate-limit: 120/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, uploadId, parts]
+              properties:
+                key: { type: string }
+                uploadId: { type: string }
+                parts:
+                  type: array
+                  items:
+                    type: object
+                    required: [partNumber, eTag]
+                    properties:
+                      partNumber: { type: integer }
+                      eTag: { type: string }
+      responses:
+        "200":
+          description: The assembled file's URL.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          key: { type: string }
+                          fileUrl: { type: string, format: uri }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /releases:
+    post:
+      tags: [Releases]
+      summary: Create a release
+      description: |
+        Idempotent on `externalId`: a repeated call returns the existing release
+        with `200` and the message "Already created". Review fields in the body
+        (`status`, `isApproved`, `isTest`…) are ignored; a release arrives
+        `pending` and its environment comes from the key.
+      x-scope: release:write
+      x-rate-limit: 120/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReleaseInput" }
+      responses:
+        "201":
+          description: Created and queued for review.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+        "200":
+          description: Already created — the same `externalId` was sent before.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: The ISRC is already in use by another release.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/TooMany" }
+    get:
+      tags: [Releases]
+      summary: List releases
+      description: Most recently updated first. Only the key's environment.
+      x-scope: release:read
+      x-rate-limit: 300/min
+      parameters:
+        - name: updatedSince
+          in: query
+          schema: { type: string, format: date-time }
+          description: Only releases changed at or after this moment.
+        - name: externalId
+          in: query
+          schema: { type: string }
+        - name: isrc
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: A page of releases.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          releases:
+                            type: array
+                            items: { $ref: "#/components/schemas/Release" }
+                          page: { type: integer }
+                          limit: { type: integer }
+                          total: { type: integer }
+                          totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /releases/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ReleaseId"
+    get:
+      tags: [Releases]
+      summary: Read one release
+      x-scope: release:read
+      x-rate-limit: 600/min
+      responses:
+        "200":
+          description: The release.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooMany" }
+    patch:
+      tags: [Releases]
+      summary: Update a release
+      description: |
+        Change what you sent, and hand the release in again. Same fields as
+        creation, all optional; at least one is required. A `needs_fix` release
+        returns to `pending` and its reason is cleared. An `approved` or
+        `delivered` release returns to review before the change reaches the
+        stores. A `rejected` or `taken_down` release cannot be edited (409). An
+        ISRC, once present, cannot be changed (409).
+      x-scope: release:write
+      x-rate-limit: 120/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReleasePatch" }
+      responses:
+        "200":
+          description: Updated; `data.status` is `pending`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Rejected or taken down, or an attempt to change an ISRC.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /releases/{id}/simulate:
+    post:
+      tags: [Sandbox]
+      summary: Move a test release to a status
+      description: Test keys only; a live key gets 403. Fires the real webhook.
+      x-scope: release:write
+      x-rate-limit: 60/min
+      parameters:
+        - $ref: "#/components/parameters/ReleaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: "#/components/schemas/Status" }
+                reason:
+                  type: string
+                  description: Used on needs_fix and rejected. Defaults to "Simulated from the sandbox."
+      responses:
+        "200":
+          description: Moved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /channels:
+    post:
+      tags: [Channels]
+      summary: Request a VEVO channel
+      description: |
+        A name already approved anywhere is approved on arrival (`status:
+        approved`). A name you already hold returns 409 naming its state; case,
+        spaces and punctuation are ignored in that comparison.
+      x-scope: channel:write
+      x-rate-limit: 30/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channelName]
+              properties:
+                channelName: { type: string, example: MoriomIslamVEVO }
+                artistName: { type: string }
+                description: { type: string }
+                keywords:
+                  oneOf:
+                    - type: array
+                      items: { type: string }
+                    - type: string
+                      description: Comma-separated.
+      responses:
+        "201":
+          description: Requested — or approved on arrival.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Channel" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: You already asked for this name.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/TooMany" }
+    get:
+      tags: [Channels]
+      summary: List channels
+      description: Most recently updated first, 200 at a time.
+      x-scope: channel:read
+      x-rate-limit: 120/min
+      responses:
+        "200":
+          description: Your channels.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          channels:
+                            type: array
+                            items: { $ref: "#/components/schemas/Channel" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /webhook:
+    get:
+      tags: [Webhooks]
+      summary: Read the webhook
+      description: The URL, and whether a secret exists. The secret itself is never returned.
+      x-scope: webhook:manage
+      x-rate-limit: 60/min
+      responses:
+        "200":
+          description: What is configured.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          url: { type: [string, "null"], format: uri }
+                          secretSet: { type: boolean }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    put:
+      tags: [Webhooks]
+      summary: Set the webhook
+      description: |
+        The URL must be https. The first call mints a signing secret and returns
+        it once. Changing the URL later leaves the secret alone; send
+        `rotateSecret: true` to mint a new one. Send an empty `url` to remove the
+        webhook.
+      x-scope: webhook:manage
+      x-rate-limit: 20/min
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+                rotateSecret: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Set — with the secret if one was minted.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          url: { type: [string, "null"] }
+                          secret:
+                            type: [string, "null"]
+                            description: Shown once. Not the API key.
+                          secretRotated: { type: boolean }
+                          note: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+  /webhook/test:
+    post:
+      tags: [Webhooks]
+      summary: Send a test event
+      description: One signed `webhook.test` event, now, and what your server did with it.
+      x-scope: webhook:manage
+      x-rate-limit: 10/min
+      responses:
+        "200":
+          description: The outcome, whether or not it was delivered.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          url: { type: string }
+                          delivered: { type: boolean }
+                          responseStatus: { type: [integer, "null"] }
+                          error: { type: [string, "null"] }
+                          sentBody: { $ref: "#/components/schemas/WebhookEvent" }
+        "400":
+          description: No webhook URL or no secret is set for this key.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooMany" }
+
+webhooks:
+  release:
+    post:
+      summary: A release changed
+      description: |
+        Sent for `release.created`, `release.needs_fix`, `release.approved`,
+        `release.isrc_assigned`, `release.delivered`, `release.rejected`,
+        `release.taken_down` and `release.updated`. Signed: `x-ans-signature:
+        v1=<hex HMAC-SHA256(secret, "<x-ans-timestamp>.<raw body>")>`. Retried
+        four times over about a minute with the same `id`. Reply 2xx quickly.
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        "200":
+          description: Acknowledged.
+  channel:
+    post:
+      summary: A channel was decided
+      description: Sent for `channel.approved` and `channel.rejected`; `data` is a Channel.
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        "200":
+          description: Acknowledged.
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: "`ans_live_…` or `ans_test_…`. The prefix is the environment."
+
+  parameters:
+    ReleaseId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Our `id`, your `externalId`, or the numeric `videoId`.
+
+  responses:
+    BadRequest:
+      description: Something in the request. The message says what.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Key missing, wrong, or revoked.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Key lacks the scope, is not permitted from this address, or is a live key on a test-only route.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Not yours, or not there.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooMany:
+      description: Too fast. Wait for `RateLimit-Reset`.
+      headers:
+        RateLimit-Limit: { schema: { type: integer } }
+        RateLimit-Remaining: { schema: { type: integer } }
+        RateLimit-Reset: { schema: { type: integer }, description: Seconds until the window resets. }
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Envelope:
+      type: object
+      required: [statusCode, success, message]
+      properties:
+        statusCode: { type: integer, example: 200 }
+        success: { type: boolean, example: true }
+        message: { type: string, example: Successful }
+
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, const: false }
+        message: { type: string }
+        errorMessages:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+
+    Me:
+      type: object
+      properties:
+        company: { type: string }
+        environment: { type: string, enum: [live, test] }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/Scope" }
+        linkedAccount:
+          type: [object, "null"]
+          properties:
+            id: { type: string }
+            name: { type: string }
+        webhookUrl: { type: [string, "null"] }
+
+    Scope:
+      type: string
+      enum: [release:write, release:read, upload:write, channel:write, channel:read, webhook:manage]
+
+    Status:
+      type: string
+      enum: [pending, needs_fix, approved, delivered, rejected, taken_down]
+
+    UploadSingle:
+      type: object
+      properties:
+        mode: { type: string, const: single }
+        key: { type: string }
+        uploadUrl: { type: string, format: uri, description: PUT the bytes here. Valid one hour. }
+        fileUrl: { type: string, format: uri, description: Use this in the release. }
+
+    UploadMultipart:
+      type: object
+      properties:
+        mode: { type: string, const: multipart }
+        key: { type: string }
+        uploadId: { type: string }
+        partSize: { type: integer, example: 10485760 }
+        fileUrl: { type: string, format: uri }
+
+    StringList:
+      oneOf:
+        - type: array
+          items: { type: string }
+        - type: string
+          description: Comma-separated.
+
+    ReleaseInput:
+      type: object
+      required: [title, primaryArtist, videoUrl]
+      properties:
+        externalId: { type: string, description: Your own id. Unique per account. }
+        title: { type: string }
+        primaryArtist: { $ref: "#/components/schemas/StringList" }
+        featuringArtists: { $ref: "#/components/schemas/StringList" }
+        videoUrl: { type: string, format: uri, description: The upload's fileUrl, or a public URL you host. `video` is an alias. }
+        imageUrl: { type: string, format: uri, description: Cover art. `image` and `thumbnail` are aliases. }
+        label: { type: string }
+        genre: { $ref: "#/components/schemas/StringList" }
+        language: { type: string }
+        releaseDate: { type: string, format: date-time, description: Must carry a timezone. Absent means as soon as approved. }
+        isrc: { type: string, description: Yours, if you have one. Dashes and spaces are stripped. }
+        channel: { type: string, description: VEVO channel name. }
+        explicit: { type: boolean }
+        description: { type: string }
+        keywords: { $ref: "#/components/schemas/StringList" }
+        composer: { type: string }
+        producer: { type: string }
+        editor: { type: string }
+        musicDirector: { type: string }
+        copyrightYear: { type: string }
+
+    ReleasePatch:
+      description: Any of the creation fields except `externalId`. At least one.
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string }
+        primaryArtist: { $ref: "#/components/schemas/StringList" }
+        featuringArtists: { $ref: "#/components/schemas/StringList" }
+        videoUrl: { type: string, format: uri }
+        imageUrl: { type: string, format: uri }
+        label: { type: string }
+        genre: { $ref: "#/components/schemas/StringList" }
+        language: { type: string }
+        releaseDate: { type: string, format: date-time }
+        isrc: { type: string, description: Only while the release has none. }
+        channel: { type: string }
+        explicit: { type: boolean }
+        description: { type: string }
+        keywords: { $ref: "#/components/schemas/StringList" }
+        composer: { type: string }
+        producer: { type: string }
+        editor: { type: string }
+        musicDirector: { type: string }
+        copyrightYear: { type: string }
+
+    Release:
+      type: object
+      properties:
+        id: { type: string, description: Ours. Stable for ever. }
+        videoId: { type: [string, "null"], description: Our number for this release. }
+        reference: { type: [string, "null"], description: Same as videoId; the name it was first published as. }
+        externalId: { type: [string, "null"] }
+        title: { type: string }
+        isrc: { type: [string, "null"] }
+        isrcAssignedByAns: { type: boolean }
+        status: { $ref: "#/components/schemas/Status" }
+        statusDetail: { type: string }
+        reason: { type: [string, "null"], description: Set on needs_fix and rejected. }
+        primaryArtist: { type: array, items: { type: string } }
+        featuringArtists: { type: array, items: { type: string } }
+        label: { type: [string, "null"] }
+        genre: { type: array, items: { type: string } }
+        releaseDate: { type: [string, "null"], format: date-time }
+        channel: { type: [string, "null"] }
+        youtubeVideoId: { type: [string, "null"] }
+        videoUrl: { type: [string, "null"], format: uri, description: A YouTube watch link once live. Not the file you sent. }
+        language: { type: [string, "null"] }
+        description: { type: [string, "null"] }
+        keywords: { type: array, items: { type: string } }
+        composer: { type: [string, "null"] }
+        producer: { type: [string, "null"] }
+        editor: { type: [string, "null"] }
+        musicDirector: { type: [string, "null"] }
+        copyrightYear: { type: [string, "null"] }
+        explicit: { type: [boolean, "null"] }
+        imageUrl: { type: [string, "null"], format: uri }
+        environment: { type: string, enum: [live, test] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ReleaseResponse:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data: { $ref: "#/components/schemas/Release" }
+
+    Channel:
+      type: object
+      properties:
+        id: { type: string }
+        channelName: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        channelUrl: { type: [string, "null"], format: uri }
+        youtubeChannelId: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    WebhookEvent:
+      type: object
+      properties:
+        id: { type: string, description: One per event, the same on every retry., example: evt_9d2c4b1e7f0a4c8e9b3d6a1f2e5c7b90 }
+        event:
+          type: string
+          enum:
+            - release.created
+            - release.needs_fix
+            - release.approved
+            - release.isrc_assigned
+            - release.delivered
+            - release.rejected
+            - release.taken_down
+            - release.updated
+            - channel.approved
+            - channel.rejected
+            - webhook.test
+        environment: { type: string, enum: [live, test] }
+        sentAt: { type: string, format: date-time }
+        data:
+          oneOf:
+            - $ref: "#/components/schemas/Release"
+            - $ref: "#/components/schemas/Channel"
+            - type: object
+              properties:
+                message: { type: string }

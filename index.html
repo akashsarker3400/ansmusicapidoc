@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>ANS Music Partner API</title>
+<meta name="description" content="Deliver music videos to ANS Music from your own system. Upload, create releases, follow every status change with signed webhooks, and request VEVO channels — REST API documentation for integration engineers.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#03091b">
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="canonical" href="https://apidoc.ansmusic.io/">
+<meta property="og:title" content="ANS Music Partner API">
+<meta property="og:description" content="Push releases, follow every status change, request VEVO channels — without anybody logging into a dashboard.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://apidoc.ansmusic.io/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Theme before paint: explicit choice, else the system.
+  try {
+    var t = localStorage.getItem('ans-doc-theme');
+    if (!t) t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <button class="iconbtn burger" id="burger" aria-label="Menu" aria-controls="rail" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <a class="brand" href="/">
+      <img src="assets/logo-white.webp" alt="ANS Music" width="120" height="40">
+      <span class="tag">Partner API · v1</span>
+    </a>
+    <div class="grow"></div>
+    <button class="search" id="search-open" type="button">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Search the docs
+      <kbd>⌘K</kbd>
+    </button>
+    <a class="toplink" href="openapi.yaml" download>OpenAPI</a>
+    <a class="toplink" href="https://ansmusic.io" rel="noopener">ansmusic.io</a>
+    <button class="iconbtn" id="theme" type="button" aria-label="Switch theme" title="Switch theme">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" id="rail" aria-label="Documentation">
+    <h5>Start here</h5>
+    <a href="#overview">Overview</a>
+    <a href="#authentication">Authentication</a>
+    <a href="#quickstart">Quickstart</a>
+    <a href="#sandbox">Sandbox &amp; testing</a>
+
+    <h5>Uploads</h5>
+    <a href="#uploads">Sending files</a>
+    <a href="#upload-start"><span class="v">POST</span> /uploads</a>
+    <a href="#upload-parts"><span class="v">POST</span> /uploads/parts</a>
+    <a href="#upload-complete"><span class="v">POST</span> /uploads/complete</a>
+
+    <h5>Releases</h5>
+    <a href="#releases">The release object</a>
+    <a href="#create-release"><span class="v">POST</span> /releases</a>
+    <a href="#list-releases"><span class="v">GET</span> /releases</a>
+    <a href="#get-release"><span class="v">GET</span> /releases/:id</a>
+    <a href="#update-release"><span class="v">PATCH</span> /releases/:id</a>
+    <a href="#lifecycle">Status lifecycle</a>
+    <a href="#media-spec">Media requirements</a>
+
+    <h5>Webhooks</h5>
+    <a href="#webhooks">How webhooks work</a>
+    <a href="#set-webhook"><span class="v">PUT</span> /webhook</a>
+    <a href="#test-webhook"><span class="v">POST</span> /webhook/test</a>
+    <a href="#events">Events</a>
+    <a href="#verify">Verifying signatures</a>
+
+    <h5>Channels</h5>
+    <a href="#channels">VEVO channels</a>
+    <a href="#request-channel"><span class="v">POST</span> /channels</a>
+    <a href="#list-channels"><span class="v">GET</span> /channels</a>
+
+    <h5>Reference</h5>
+    <a href="#simulate"><span class="v">POST</span> …/simulate</a>
+    <a href="#errors">Errors</a>
+    <a href="#rate-limits">Rate limits</a>
+    <a href="#endpoint-index">Endpoint index</a>
+    <a href="#changelog">Changelog</a>
+    <a href="#support">Support</a>
+  </nav>
+
+  <main id="main">
+
+    <div class="hero">
+      <span class="eyebrow">For integration engineers</span>
+      <h1>Deliver to ANS Music from your own system.</h1>
+      <p class="lede">Push music video releases, follow every status change with signed webhooks, and request VEVO channels — without anybody logging into a dashboard. One key, one base URL, JSON everywhere. You should be sending your first release inside an hour.</p>
+      <div class="cta">
+        <a class="btn primary" href="#quickstart">Start in 10 minutes
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn" href="openapi.yaml" download>Download OpenAPI 3.1</a>
+        <a class="btn" href="mailto:support@ansmusic.io?subject=Partner%20API%20key">Request a key</a>
+      </div>
+      <div class="facts">
+        <span class="fact"><b>REST</b> + JSON</span>
+        <span class="fact"><b>Signed</b> webhooks</span>
+        <span class="fact"><b>Sandbox</b> with real events</span>
+        <span class="fact"><b>Idempotent</b> creates</span>
+        <span class="fact"><b>No</b> file size limit</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="overview">
+      <h2><span class="num">01</span>Overview</h2>
+      <p class="lead">Everything lives under one base URL, takes and returns JSON, and answers in the same envelope every time.</p>
+
+      <div class="tw"><table>
+        <tbody>
+          <tr><td style="width:180px"><b>Base URL</b></td><td><code>https://server.ansmusic.io/partner</code></td></tr>
+          <tr><td><b>Authentication</b></td><td>Header <code>x-api-key: ans_live_…</code> on every request — see <a href="#authentication">Authentication</a></td></tr>
+          <tr><td><b>Content type</b></td><td><code>application/json</code>, UTF-8, on requests and responses. Files never pass through this API — see <a href="#uploads">Sending files</a></td></tr>
+          <tr><td><b>Timestamps</b></td><td>ISO 8601 with a timezone. What you send is read that way; what we return is UTC with a <code>Z</code></td></tr>
+          <tr><td><b>Ids</b></td><td>Ours are 24-character hex strings and stable for ever. You may address a release by our <code>id</code>, your <code>externalId</code>, or the numeric <code>videoId</code></td></tr>
+          <tr><td><b>Versioning</b></td><td>This is v1. Fields are added, never removed or renamed; a breaking change would be a new path. See the <a href="#changelog">changelog</a></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 id="envelope">The response envelope <a class="anchor" href="#envelope">#</a></h3>
+      <p>Every response — success or failure — is one JSON object with the same four fields. What you want is under <code>data</code>; <code>message</code> is a sentence meant to be read, not a code to look up.</p>
+      <div class="code"><pre><code><span class="c">// GET /partner/me</span>
+{
+  <span class="k">"statusCode"</span>: <span class="n">200</span>,
+  <span class="k">"success"</span>:    <span class="n">true</span>,
+  <span class="k">"message"</span>:    <span class="s">"Successful"</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"company"</span>:       <span class="s">"Your Company Ltd"</span>,
+    <span class="k">"environment"</span>:   <span class="s">"live"</span>,
+    <span class="k">"scopes"</span>:        [<span class="s">"release:write"</span>, <span class="s">"release:read"</span>, <span class="s">"upload:write"</span>, <span class="s">"webhook:manage"</span>],
+    <span class="k">"linkedAccount"</span>: { <span class="k">"id"</span>: <span class="s">"66e7f0a1c2b3d4e5f6a7b8c9"</span>, <span class="k">"name"</span>: <span class="s">"Your Company Ltd"</span> },
+    <span class="k">"webhookUrl"</span>:    <span class="s">"https://your-system.example.com/ans/webhook"</span>
+  }
+}</code></pre></div>
+      <p class="muted small">Lists put their page under <code>data</code> too — <code>data.releases</code>, <code>data.channels</code> — with the paging figures beside them. Errors keep the envelope with <code>success: false</code>; see <a href="#errors">Errors</a>.</p>
+
+      <h3 id="what-you-can-do">What you can do <a class="anchor" href="#what-you-can-do">#</a></h3>
+      <div class="cards">
+        <a class="cardl" href="#uploads"><b>Upload a master</b><span>Presigned URLs straight to storage. Multipart for anything large, resumable part by part.</span></a>
+        <a class="cardl" href="#create-release"><b>Create a release</b><span>Title, artists, artwork, video, channel — idempotent on your own id.</span></a>
+        <a class="cardl" href="#webhooks"><b>Be told what happened</b><span>Approved, sent back, rejected, ISRC issued, live — signed and retried.</span></a>
+        <a class="cardl" href="#update-release"><b>Answer a correction</b><span>Change what was wrong and the release returns to review on its own.</span></a>
+        <a class="cardl" href="#channels"><b>Request VEVO channels</b><span>By name. Approved on arrival when we already have it.</span></a>
+        <a class="cardl" href="#sandbox"><b>Rehearse it all</b><span>A test key sees the same API, fires the same webhooks, and reaches no store.</span></a>
+      </div>
+
+      <div class="call note">
+        <p class="cap">This version delivers music videos</p>
+        <p>Every release carries a video file and can carry a VEVO channel. Audio-only releases are not accepted through this API yet — if you need them, tell us at <a href="mailto:support@ansmusic.io">support@ansmusic.io</a> and we will say when.</p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="authentication">
+      <h2><span class="num">02</span>Authentication</h2>
+      <p class="lead">One key per environment, sent in a header. The key decides who you are, what you may do, and whether your writes are real.</p>
+
+      <div class="code tabbed" data-tabs>
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-tab="curl">cURL</button>
+          <button role="tab" aria-selected="false" data-tab="node">Node.js</button>
+          <button role="tab" aria-selected="false" data-tab="python">Python</button>
+          <button role="tab" aria-selected="false" data-tab="php">PHP</button>
+        </div>
+<pre data-tab="curl"><code>curl https://server.ansmusic.io/partner/me \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span></code></pre>
+<pre data-tab="node" hidden><code><span class="k">const</span> res = <span class="k">await</span> fetch(<span class="s">'https://server.ansmusic.io/partner/me'</span>, {
+  headers: { <span class="s">'x-api-key'</span>: process.env.ANS_API_KEY },
+});
+<span class="k">const</span> { data } = <span class="k">await</span> res.json();
+console.log(data.company, data.environment, data.scopes);</code></pre>
+<pre data-tab="python" hidden><code><span class="k">import</span> os, requests
+
+r = requests.get(
+    <span class="s">"https://server.ansmusic.io/partner/me"</span>,
+    headers={<span class="s">"x-api-key"</span>: os.environ[<span class="s">"ANS_API_KEY"</span>]},
+    timeout=<span class="n">15</span>,
+)
+me = r.json()[<span class="s">"data"</span>]
+print(me[<span class="s">"company"</span>], me[<span class="s">"environment"</span>], me[<span class="s">"scopes"</span>])</code></pre>
+<pre data-tab="php" hidden><code><span class="k">$ch</span> = curl_init(<span class="s">'https://server.ansmusic.io/partner/me'</span>);
+curl_setopt_array(<span class="k">$ch</span>, [
+  CURLOPT_RETURNTRANSFER =&gt; <span class="n">true</span>,
+  CURLOPT_HTTPHEADER     =&gt; [<span class="s">'x-api-key: '</span> . getenv(<span class="s">'ANS_API_KEY'</span>)],
+]);
+<span class="k">$me</span> = json_decode(curl_exec(<span class="k">$ch</span>), <span class="n">true</span>)[<span class="s">'data'</span>];
+echo <span class="k">$me</span>[<span class="s">'company'</span>], <span class="s">' '</span>, <span class="k">$me</span>[<span class="s">'environment'</span>];</code></pre>
+      </div>
+
+      <h3 id="keys">Keys and environments <a class="anchor" href="#keys">#</a></h3>
+      <p>A key is a 57-character string whose prefix names its environment, so a key pasted into the wrong config is visible on sight rather than discovered when rehearsal uploads turn up in the catalogue.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Prefix</th><th>Environment</th><th>What its writes do</th></tr></thead>
+        <tbody>
+          <tr><td><code>ans_live_…</code></td><td>live</td><td>Real releases. They reach the review queue, the catalogue, the stores and VEVO, and are counted in royalty reports.</td></tr>
+          <tr><td><code>ans_test_…</code></td><td>test</td><td>The same API, the same responses, the same webhooks. Nothing reaches a reviewer, a store or a report — see <a href="#sandbox">Sandbox</a>.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Keys do not expire on a timer. They are revoked by a person, on purpose. <code>GET /partner/me</code> tells you which environment and scopes the key you are holding has.</p>
+
+      <h3 id="scopes">Scopes <a class="anchor" href="#scopes">#</a></h3>
+      <p>A key carries only what it needs. Tell us which of these you use and it is issued accordingly; a call outside the key's scopes is refused with <code>403</code>.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Scope</th><th>Allows</th><th>Endpoints</th></tr></thead>
+        <tbody>
+          <tr><td><code>release:write</code></td><td>Create and update releases, drive the sandbox</td><td><code>POST /releases</code>, <code>PATCH /releases/:id</code>, <code>POST /releases/:id/simulate</code></td></tr>
+          <tr><td><code>release:read</code></td><td>Read releases, statuses, ISRCs, reasons</td><td><code>GET /releases</code>, <code>GET /releases/:id</code></td></tr>
+          <tr><td><code>upload:write</code></td><td>Get upload URLs</td><td><code>POST /uploads</code>, <code>/uploads/parts</code>, <code>/uploads/complete</code></td></tr>
+          <tr><td><code>channel:write</code></td><td>Request VEVO channels</td><td><code>POST /channels</code></td></tr>
+          <tr><td><code>channel:read</code></td><td>Read channels</td><td><code>GET /channels</code></td></tr>
+          <tr><td><code>webhook:manage</code></td><td>Set, read and test the webhook</td><td><code>PUT /webhook</code>, <code>GET /webhook</code>, <code>POST /webhook/test</code></td></tr>
+        </tbody>
+      </table></div>
+      <p class="muted small"><code>GET /partner/me</code> needs no scope — any valid key may ask who it is.</p>
+
+      <h3 id="ip-allowlist">IP allowlist <a class="anchor" href="#ip-allowlist">#</a></h3>
+      <p>Tell us the addresses you call from and the key is restricted to them; a call from anywhere else is refused with <code>403</code> and a message saying so. We read the connecting address through Cloudflare, so a proxy of your own in front of us is fine as long as its egress address is on the list.</p>
+
+      <div class="call warn">
+        <p class="cap">Keep the key server-side</p>
+        <p>It is a bearer credential: whoever holds it is you. Never put one in a browser, a mobile app, a repository or a log line. If a key is exposed, tell us — we issue a replacement, both work while you switch, then the old one is revoked.</p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="quickstart">
+      <h2><span class="num">03</span>Quickstart</h2>
+      <p class="lead">Your first release, end to end, against a test key. Every step is one call; the whole thing takes about ten minutes.</p>
+
+      <ol class="steps">
+        <li>
+          <b>Confirm the key</b>
+          <p>Ask who you are. This is the call to put in a health check.</p>
+          <div class="code"><pre><code>curl https://server.ansmusic.io/partner/me -H <span class="s">"x-api-key: $ANS_API_KEY"</span>
+<span class="c"># → data.environment: "test", data.scopes: [...]</span></code></pre></div>
+        </li>
+        <li>
+          <b>Point us at your webhook</b>
+          <p>Do this before creating anything so the very first event is witnessed. The response carries a signing secret that is shown once — store it.</p>
+          <div class="code"><pre><code>curl -X PUT https://server.ansmusic.io/partner/webhook \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{ "url": "https://your-system.example.com/ans/webhook" }'</span>
+<span class="c"># → data.secret: "whsec_…"  (once, and only now)</span>
+
+curl -X POST https://server.ansmusic.io/partner/webhook/test -H <span class="s">"x-api-key: $ANS_API_KEY"</span>
+<span class="c"># → data.delivered: true, data.responseStatus: 200</span></code></pre></div>
+        </li>
+        <li>
+          <b>Get an upload URL and send the file</b>
+          <p>Files go straight to storage on a presigned URL; they never pass through this API. Under 50&nbsp;MB is a single <code>PUT</code>; anything larger is multipart — see <a href="#uploads">Sending files</a>. If you already host your media on a public URL, skip this step.</p>
+          <div class="code"><pre><code>curl -X POST https://server.ansmusic.io/partner/uploads \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{ "fileName": "cover.jpg", "contentType": "image/jpeg", "category": "image", "size": 1592000 }'</span>
+<span class="c"># → data.mode: "single", data.uploadUrl: "https://…", data.fileUrl: "https://cdn.ansmusic.io/…"</span>
+
+curl -X PUT <span class="s">"$UPLOAD_URL"</span> -H <span class="s">"content-type: image/jpeg"</span> --data-binary @cover.jpg</code></pre></div>
+        </li>
+        <li>
+          <b>Create the release</b>
+          <p>Three fields are required: <code>title</code>, <code>primaryArtist</code>, <code>videoUrl</code>. Send your own <code>externalId</code> so a retry can never create it twice.</p>
+          <div class="code"><pre><code>curl -X POST https://server.ansmusic.io/partner/releases \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{
+    "externalId":    "REL-2026-0412",
+    "title":         "Akashe Batase",
+    "primaryArtist": ["Moriom Islam"],
+    "label":         "TEC Music",
+    "genre":         ["Pop"],
+    "language":      "Bengali",
+    "releaseDate":   "2026-10-01T12:00:00Z",
+    "videoUrl":      "https://cdn.ansmusic.io/uploads/videos/…mp4",
+    "imageUrl":      "https://cdn.ansmusic.io/uploads/images/image/…jpg"
+  }'</span>
+<span class="c"># → 201, data.status: "pending", data.videoId: "801142"</span>
+<span class="c"># your webhook receives release.created</span></code></pre></div>
+        </li>
+        <li>
+          <b>Move it, and watch the events arrive</b>
+          <p>On a test key you play the reviewer. Each simulated status fires the same webhook a real change does.</p>
+          <div class="code"><pre><code>curl -X POST https://server.ansmusic.io/partner/releases/REL-2026-0412/simulate \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{ "status": "needs_fix", "reason": "Cover art is below 1400px." }'</span>
+<span class="c"># your webhook receives release.needs_fix, data.reason set</span>
+
+curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{ "imageUrl": "https://cdn.ansmusic.io/uploads/images/image/…-fixed.jpg" }'</span>
+<span class="c"># → data.status: "pending" — back in review</span></code></pre></div>
+        </li>
+      </ol>
+      <p>Then go through the <a href="#before-live">pre-launch checklist</a>, send us one real release on the live key, and switch the rest across.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="sandbox">
+      <h2><span class="num">04</span>Sandbox &amp; testing</h2>
+      <p class="lead">Write to <a href="mailto:support@ansmusic.io">support@ansmusic.io</a> for a test key. It is the same API, the same base URL and the same responses — the only difference is where what you write ends up.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>With a test key…</th><th>Live</th><th>Test</th></tr></thead>
+        <tbody>
+          <tr><td>Uploads reach storage</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Releases are created, readable and updatable by you</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Webhooks fire, signed the same way</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Rate limits apply</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Appears in the ANS Music review queue</td><td>Yes</td><td>—</td></tr>
+          <tr><td>Reaches the catalogue, the stores, VEVO</td><td>Yes</td><td>—</td></tr>
+          <tr><td>Counted in any royalty report</td><td>Yes</td><td>—</td></tr>
+          <tr><td>You can move it through the statuses yourself</td><td>—</td><td>Yes</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>Test rows are hidden at the database level rather than filtered out by each screen, so no query anywhere can accidentally include them. Nothing you do with a test key needs cleaning up, and nothing you do with it can be seen by anybody at ANS Music. The two environments are sealed from each other: a live key cannot read a test release, and vice versa — you get a <code>404</code>.</p>
+
+      <h3 id="simulate-intro">Play the reviewer <a class="anchor" href="#simulate-intro">#</a></h3>
+      <p>Approvals and rejections happen when a reviewer here gets to them, which is no use when you are testing a handler on a Tuesday afternoon. A test key moves its own releases — see <a href="#simulate"><code>POST /releases/:id/simulate</code></a>. Each move fires the real webhook, signed with your real secret, carrying the release as it now stands.</p>
+
+      <h3 id="before-live">Before you go live <a class="anchor" href="#before-live">#</a></h3>
+      <p>Worth having done at least once against the test key:</p>
+      <ul>
+        <li>A multipart upload of something over 1&nbsp;GB, with one part deliberately failed and retried.</li>
+        <li>A repeated <code>POST /releases</code> with the same <code>externalId</code> — confirm you get the same release back with <code>200 Already created</code> rather than a second one.</li>
+        <li>A webhook with a deliberately wrong signature — confirm you reject it with <code>401</code>.</li>
+        <li>A webhook replayed an hour later — confirm your timestamp check rejects it.</li>
+        <li>The same event <code>id</code> delivered twice — confirm your handler does the work once.</li>
+        <li>A <code>needs_fix</code> answered with <code>PATCH</code> — confirm your dashboard shows it back in review.</li>
+        <li><code>?updatedSince=</code> after leaving your endpoint down for a while — confirm you catch up.</li>
+        <li>A <code>429</code>, by exceeding a limit on purpose — confirm you wait for <code>RateLimit-Reset</code> rather than hammer.</li>
+      </ul>
+      <p class="muted">Then send us one real release on the live key before switching the rest across.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="uploads">
+      <h2><span class="num">05</span>Sending files</h2>
+      <p class="lead">Ask for a URL, put the bytes there, use the resulting <code>fileUrl</code> in the release. Your file never passes through our servers, so size stops mattering.</p>
+
+      <div class="call warn">
+        <p class="cap">Do not POST the file to this API</p>
+        <p>Our hosts sit behind Cloudflare, which refuses any request body over 100&nbsp;MB. No music video gets through that. The presigned URL is a direct route to storage; the API only signs it.</p>
+      </div>
+
+      <p>You can skip this section entirely if you host your own media on a public URL: send it as <code>videoUrl</code> / <code>imageUrl</code> in the release. Both routes are supported and always will be — but a URL you host must stay reachable until the release is delivered, and a private, expiring or IP-restricted link will fail at review.</p>
+
+      <!-- POST /uploads -->
+      <h3 id="upload-start">Start an upload <a class="anchor" href="#upload-start">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads</span><span class="ep-scope">scope <code>upload:write</code> · 120/min</span></div>
+        <div class="ep-body">
+          <div class="tw" style="margin:0"><table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>fileName</code></td><td class="type">string</td><td><span class="req">required</span></td><td>Used for the extension and a readable object name. Sanitised; not used verbatim.</td></tr>
+              <tr><td><code>category</code></td><td class="type">"video" | "image"</td><td><span class="opt">optional</span></td><td>Default <code>video</code>. Decides the storage prefix and the default content type.</td></tr>
+              <tr><td><code>contentType</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Default <code>video/mp4</code> or <code>image/jpeg</code> to match the category. Send the real one.</td></tr>
+              <tr><td><code>size</code></td><td class="type">integer</td><td><span class="opt">optional</span></td><td>Bytes. Decides single vs multipart. <strong>Absent is treated as large</strong> — guessing small and being wrong fails at the end of a long upload; guessing large costs one round trip.</td></tr>
+            </tbody>
+          </table></div>
+          <div class="two">
+            <div><p class="cap">Under 50 MB — one PUT</p>
+<pre><code>{
+  <span class="k">"mode"</span>:      <span class="s">"single"</span>,
+  <span class="k">"key"</span>:       <span class="s">"uploads/images/image/yourco-cover-a1b2c3.jpg"</span>,
+  <span class="k">"uploadUrl"</span>: <span class="s">"https://…?X-Amz-Signature=…"</span>,
+  <span class="k">"fileUrl"</span>:   <span class="s">"https://cdn.ansmusic.io/uploads/images/image/…"</span>
+}</code></pre></div>
+            <div><p class="cap">Over 50 MB, or size unknown — multipart</p>
+<pre><code>{
+  <span class="k">"mode"</span>:     <span class="s">"multipart"</span>,
+  <span class="k">"key"</span>:      <span class="s">"uploads/videos/yourco-master-a1b2c3.mp4"</span>,
+  <span class="k">"uploadId"</span>: <span class="s">"2~k9Vt…"</span>,
+  <span class="k">"partSize"</span>: <span class="n">10485760</span>,
+  <span class="k">"fileUrl"</span>:  <span class="s">"https://cdn.ansmusic.io/uploads/videos/…"</span>
+}</code></pre></div>
+          </div>
+          <p>For <code>single</code>: <code>PUT</code> the bytes to <code>uploadUrl</code> with the same <code>content-type</code> you declared. For <code>multipart</code>: split the file into <code>partSize</code> chunks and continue below. Either way, <code>fileUrl</code> is what you put in the release — it is known before a single byte is sent. Signed URLs are valid for <strong>one hour</strong>.</p>
+        </div>
+      </div>
+
+      <!-- POST /uploads/parts -->
+      <h3 id="upload-parts">Sign parts <a class="anchor" href="#upload-parts">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/parts</span><span class="ep-scope">scope <code>upload:write</code> · 600/min</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"key"</span>: <span class="s">"uploads/videos/…"</span>, <span class="k">"uploadId"</span>: <span class="s">"2~k9Vt…"</span>, <span class="k">"partNumbers"</span>: [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>] }
+
+<span class="c">→</span>
+{ <span class="k">"urls"</span>: [ { <span class="k">"partNumber"</span>: <span class="n">1</span>, <span class="k">"uploadUrl"</span>: <span class="s">"https://…"</span> }, … ] }</code></pre>
+          <p>Ask for a block at a time rather than all of them at once — a URL signed an hour before it is reached will have expired. At most <strong>200 part numbers per request</strong>. <code>PUT</code> each chunk to its URL and keep the <code>ETag</code> response header; you will need it to finish.</p>
+          <p class="muted small">Part numbers start at 1. Every part except the last must be at least 5&nbsp;MB; using exactly <code>partSize</code> for all but the last is the simple way to satisfy that. Parts may be uploaded in parallel and in any order.</p>
+        </div>
+      </div>
+
+      <!-- POST /uploads/complete -->
+      <h3 id="upload-complete">Finish the upload <a class="anchor" href="#upload-complete">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/complete</span><span class="ep-scope">scope <code>upload:write</code> · 120/min</span></div>
+        <div class="ep-body">
+<pre><code>{
+  <span class="k">"key"</span>: <span class="s">"uploads/videos/…"</span>, <span class="k">"uploadId"</span>: <span class="s">"2~k9Vt…"</span>,
+  <span class="k">"parts"</span>: [ { <span class="k">"partNumber"</span>: <span class="n">1</span>, <span class="k">"eTag"</span>: <span class="s">"\"9b2cf5…\""</span> }, { <span class="k">"partNumber"</span>: <span class="n">2</span>, <span class="k">"eTag"</span>: <span class="s">"\"e1f0a3…\""</span> } ]
+}
+
+<span class="c">→</span>
+{ <span class="k">"key"</span>: <span class="s">"uploads/videos/…"</span>, <span class="k">"fileUrl"</span>: <span class="s">"https://cdn.ansmusic.io/uploads/videos/…"</span> }</code></pre>
+          <p>Send every part with its ETag, in any order — we sort them, and the quotes around an ETag are stripped for you. A part that failed is retried on its own rather than the whole file; that is as much the point of parts as the size is.</p>
+        </div>
+      </div>
+
+      <h3 id="upload-example">A complete multipart upload <a class="anchor" href="#upload-example">#</a></h3>
+      <p>Node.js, with parts sent five at a time and each retried on its own. This is the shape to copy; the language does not matter.</p>
+      <div class="code"><pre><code><span class="k">import</span> { open } <span class="k">from</span> <span class="s">'node:fs/promises'</span>;
+
+<span class="k">const</span> BASE = <span class="s">'https://server.ansmusic.io/partner'</span>;
+<span class="k">const</span> H = { <span class="s">'x-api-key'</span>: process.env.ANS_API_KEY, <span class="s">'content-type'</span>: <span class="s">'application/json'</span> };
+<span class="k">const</span> api = <span class="k">async</span> (path, body) =&gt; {
+  <span class="k">const</span> r = <span class="k">await</span> fetch(BASE + path, { method: <span class="s">'POST'</span>, headers: H, body: JSON.stringify(body) });
+  <span class="k">const</span> j = <span class="k">await</span> r.json();
+  <span class="k">if</span> (!j.success) <span class="k">throw</span> <span class="k">new</span> Error(j.message);
+  <span class="k">return</span> j.data;
+};
+
+<span class="k">export</span> <span class="k">async</span> <span class="k">function</span> uploadMaster(filePath, fileName) {
+  <span class="k">const</span> fh = <span class="k">await</span> open(filePath);
+  <span class="k">const</span> size = (<span class="k">await</span> fh.stat()).size;
+
+  <span class="k">const</span> start = <span class="k">await</span> api(<span class="s">'/uploads'</span>, { fileName, contentType: <span class="s">'video/mp4'</span>, category: <span class="s">'video'</span>, size });
+
+  <span class="k">if</span> (start.mode === <span class="s">'single'</span>) {
+    <span class="k">const</span> buf = Buffer.alloc(size); <span class="k">await</span> fh.read(buf, <span class="n">0</span>, size, <span class="n">0</span>);
+    <span class="k">await</span> fetch(start.uploadUrl, { method: <span class="s">'PUT'</span>, headers: { <span class="s">'content-type'</span>: <span class="s">'video/mp4'</span> }, body: buf });
+    <span class="k">return</span> start.fileUrl;
+  }
+
+  <span class="k">const</span> { key, uploadId, partSize } = start;
+  <span class="k">const</span> total = Math.ceil(size / partSize);
+  <span class="k">const</span> done = [];
+
+  <span class="k">const</span> putPart = <span class="k">async</span> (partNumber, uploadUrl) =&gt; {
+    <span class="k">const</span> offset = (partNumber - <span class="n">1</span>) * partSize;
+    <span class="k">const</span> len = Math.min(partSize, size - offset);
+    <span class="k">const</span> buf = Buffer.alloc(len); <span class="k">await</span> fh.read(buf, <span class="n">0</span>, len, offset);
+    <span class="k">for</span> (<span class="k">let</span> attempt = <span class="n">1</span>; ; attempt++) {
+      <span class="k">const</span> r = <span class="k">await</span> fetch(uploadUrl, { method: <span class="s">'PUT'</span>, body: buf });
+      <span class="k">if</span> (r.ok) <span class="k">return</span> { partNumber, eTag: r.headers.get(<span class="s">'etag'</span>) };
+      <span class="k">if</span> (attempt === <span class="n">3</span>) <span class="k">throw</span> <span class="k">new</span> Error(<span class="s">`part ${partNumber} failed: ${r.status}`</span>);
+      <span class="k">await</span> <span class="k">new</span> Promise(res =&gt; setTimeout(res, <span class="n">1000</span> * attempt));
+    }
+  };
+
+  <span class="c">// Sign five at a time so a URL is always fresh when it is used.</span>
+  <span class="k">for</span> (<span class="k">let</span> n = <span class="n">1</span>; n &lt;= total; n += <span class="n">5</span>) {
+    <span class="k">const</span> partNumbers = Array.from({ length: Math.min(<span class="n">5</span>, total - n + <span class="n">1</span>) }, (_, i) =&gt; n + i);
+    <span class="k">const</span> { urls } = <span class="k">await</span> api(<span class="s">'/uploads/parts'</span>, { key, uploadId, partNumbers });
+    done.push(...(<span class="k">await</span> Promise.all(urls.map(u =&gt; putPart(u.partNumber, u.uploadUrl)))));
+  }
+
+  <span class="k">const</span> finished = <span class="k">await</span> api(<span class="s">'/uploads/complete'</span>, { key, uploadId, parts: done });
+  <span class="k">await</span> fh.close();
+  <span class="k">return</span> finished.fileUrl;   <span class="c">// → videoUrl for POST /releases</span>
+}</code></pre></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="releases">
+      <h2><span class="num">06</span>Releases</h2>
+      <p class="lead">A release is one music video: its metadata, its files, where it should go, and what has happened to it since you sent it.</p>
+
+      <h3 id="release-object">The release object <a class="anchor" href="#release-object">#</a></h3>
+      <p>This is what every read returns and every webhook carries, so a webhook and a <code>GET</code> can never disagree.</p>
+      <div class="code"><pre><code>{
+  <span class="k">"id"</span>:                <span class="s">"66e7f0a1c2b3d4e5f6a7b8c9"</span>,
+  <span class="k">"videoId"</span>:           <span class="s">"801142"</span>,
+  <span class="k">"reference"</span>:         <span class="s">"801142"</span>,
+  <span class="k">"externalId"</span>:        <span class="s">"REL-2026-0412"</span>,
+  <span class="k">"title"</span>:             <span class="s">"Akashe Batase"</span>,
+  <span class="k">"isrc"</span>:              <span class="s">"QT6X62690001"</span>,
+  <span class="k">"isrcAssignedByAns"</span>: <span class="n">true</span>,
+  <span class="k">"status"</span>:            <span class="s">"approved"</span>,
+  <span class="k">"statusDetail"</span>:      <span class="s">"Accepted and on its way to the stores."</span>,
+  <span class="k">"reason"</span>:            <span class="n">null</span>,
+  <span class="k">"primaryArtist"</span>:     [<span class="s">"Moriom Islam"</span>],
+  <span class="k">"featuringArtists"</span>:  [<span class="s">"Moon"</span>],
+  <span class="k">"label"</span>:             <span class="s">"TEC Music"</span>,
+  <span class="k">"genre"</span>:             [<span class="s">"Pop"</span>],
+  <span class="k">"releaseDate"</span>:       <span class="s">"2026-10-01T12:00:00.000Z"</span>,
+  <span class="k">"channel"</span>:           <span class="s">"MoriomIslamVEVO"</span>,
+  <span class="k">"youtubeVideoId"</span>:    <span class="n">null</span>,
+  <span class="k">"videoUrl"</span>:          <span class="n">null</span>,
+  <span class="k">"language"</span>:          <span class="s">"Bengali"</span>,
+  <span class="k">"description"</span>:       <span class="s">"Official music video."</span>,
+  <span class="k">"keywords"</span>:          [<span class="s">"bangla"</span>, <span class="s">"pop"</span>],
+  <span class="k">"composer"</span>:          <span class="s">"—"</span>,
+  <span class="k">"producer"</span>:          <span class="n">null</span>,
+  <span class="k">"editor"</span>:            <span class="n">null</span>,
+  <span class="k">"musicDirector"</span>:     <span class="n">null</span>,
+  <span class="k">"copyrightYear"</span>:     <span class="s">"2026"</span>,
+  <span class="k">"explicit"</span>:          <span class="n">false</span>,
+  <span class="k">"imageUrl"</span>:          <span class="s">"https://cdn.ansmusic.io/uploads/images/image/…"</span>,
+  <span class="k">"environment"</span>:       <span class="s">"live"</span>,
+  <span class="k">"createdAt"</span>:         <span class="s">"2026-09-15T10:04:30.034Z"</span>,
+  <span class="k">"updatedAt"</span>:         <span class="s">"2026-09-15T12:41:07.512Z"</span>
+}</code></pre></div>
+
+      <div class="tw"><table>
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td class="type">string</td><td>Ours. Stable for ever. Accepted anywhere a path takes <code>:id</code>.</td></tr>
+          <tr><td><code>videoId</code></td><td class="type">string</td><td>Our number for this release — the one to quote when you ask us about it. Also accepted as <code>:id</code>.</td></tr>
+          <tr><td><code>reference</code></td><td class="type">string</td><td>The same value as <code>videoId</code>, under the name this field was first published as. Both are sent; use either.</td></tr>
+          <tr><td><code>externalId</code></td><td class="type">string | null</td><td>Yours, if you sent one. Also accepted as <code>:id</code>.</td></tr>
+          <tr><td><code>title</code></td><td class="type">string</td><td></td></tr>
+          <tr><td><code>isrc</code></td><td class="type">string | null</td><td>Twelve characters, no dashes. Null until we issue one at approval or you supply one.</td></tr>
+          <tr><td><code>isrcAssignedByAns</code></td><td class="type">boolean</td><td>True when we issued the code. If you sent one we keep it and never replace it, so this stays false and no <code>release.isrc_assigned</code> is sent — there is nothing to tell you that you did not already know.</td></tr>
+          <tr><td><code>status</code></td><td class="type">enum</td><td>One of the six in <a href="#lifecycle">Status lifecycle</a>.</td></tr>
+          <tr><td><code>statusDetail</code></td><td class="type">string</td><td>The same thing in a sentence, so your dashboard needs no lookup table.</td></tr>
+          <tr><td><code>reason</code></td><td class="type">string | null</td><td>Set on <code>needs_fix</code> (what to change) and <code>rejected</code> (why). Null otherwise. Cleared when the release returns to review.</td></tr>
+          <tr><td><code>primaryArtist</code></td><td class="type">string[]</td><td></td></tr>
+          <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td></td></tr>
+          <tr><td><code>label</code></td><td class="type">string | null</td><td></td></tr>
+          <tr><td><code>genre</code></td><td class="type">string[]</td><td>As we hold it — which may be mapped from what you sent; see <a href="#we-may-edit">we may edit what you send</a>.</td></tr>
+          <tr><td><code>releaseDate</code></td><td class="type">ISO 8601 | null</td><td>Null means as soon as it is approved.</td></tr>
+          <tr><td><code>channel</code></td><td class="type">string | null</td><td>The VEVO channel name it goes to.</td></tr>
+          <tr><td><code>youtubeVideoId</code></td><td class="type">string | null</td><td>The eleven-character YouTube id, once the video is live. Null before that.</td></tr>
+          <tr><td><code>videoUrl</code></td><td class="type">url | null</td><td>A watch link built from <code>youtubeVideoId</code>. Present once it is watchable — <strong>not</strong> the file you sent.</td></tr>
+          <tr><td><code>language</code> … <code>copyrightYear</code></td><td class="type">string | null</td><td>The descriptive fields, returned as we hold them.</td></tr>
+          <tr><td><code>keywords</code></td><td class="type">string[]</td><td></td></tr>
+          <tr><td><code>explicit</code></td><td class="type">boolean | null</td><td>Null when nobody has said.</td></tr>
+          <tr><td><code>imageUrl</code></td><td class="type">url | null</td><td>The cover art as stored.</td></tr>
+          <tr><td><code>environment</code></td><td class="type">"live" | "test"</td><td>Which world this landed in. A test release is real but reaches no reviewer or store.</td></tr>
+          <tr><td><code>createdAt</code>, <code>updatedAt</code></td><td class="type">ISO 8601</td><td><code>updatedAt</code> is what <code>updatedSince</code> compares against.</td></tr>
+        </tbody>
+      </table></div>
+
+      <!-- POST /releases -->
+      <h3 id="create-release">Create a release <a class="anchor" href="#create-release">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases</span><span class="ep-scope">scope <code>release:write</code> · 120/min</span></div>
+        <div class="ep-body">
+          <div class="code tabbed" data-tabs style="margin:0">
+            <div class="tabs" role="tablist">
+              <button role="tab" aria-selected="true" data-tab="curl">cURL</button>
+              <button role="tab" aria-selected="false" data-tab="node">Node.js</button>
+              <button role="tab" aria-selected="false" data-tab="python">Python</button>
+              <button role="tab" aria-selected="false" data-tab="php">PHP</button>
+            </div>
+<pre data-tab="curl"><code>curl -X POST https://server.ansmusic.io/partner/releases \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{
+    "externalId":       "REL-2026-0412",
+    "title":            "Akashe Batase",
+    "primaryArtist":    ["Moriom Islam"],
+    "featuringArtists": ["Moon"],
+    "label":            "TEC Music",
+    "genre":            ["Pop"],
+    "language":         "Bengali",
+    "releaseDate":      "2026-10-01T12:00:00Z",
+    "channel":          "MoriomIslamVEVO",
+    "explicit":         false,
+    "videoUrl":         "https://cdn.ansmusic.io/uploads/videos/yourco-master-a1b2c3.mp4",
+    "imageUrl":         "https://cdn.ansmusic.io/uploads/images/image/yourco-cover-d4e5f6.jpg"
+  }'</span></code></pre>
+<pre data-tab="node" hidden><code><span class="k">const</span> r = <span class="k">await</span> fetch(<span class="s">'https://server.ansmusic.io/partner/releases'</span>, {
+  method: <span class="s">'POST'</span>,
+  headers: { <span class="s">'x-api-key'</span>: process.env.ANS_API_KEY, <span class="s">'content-type'</span>: <span class="s">'application/json'</span> },
+  body: JSON.stringify({
+    externalId: <span class="s">'REL-2026-0412'</span>,
+    title: <span class="s">'Akashe Batase'</span>,
+    primaryArtist: [<span class="s">'Moriom Islam'</span>],
+    featuringArtists: [<span class="s">'Moon'</span>],
+    label: <span class="s">'TEC Music'</span>,
+    genre: [<span class="s">'Pop'</span>],
+    language: <span class="s">'Bengali'</span>,
+    releaseDate: <span class="s">'2026-10-01T12:00:00Z'</span>,
+    channel: <span class="s">'MoriomIslamVEVO'</span>,
+    explicit: <span class="n">false</span>,
+    videoUrl: fileUrl,           <span class="c">// from the upload, or a URL you host</span>
+    imageUrl: coverUrl,
+  }),
+});
+<span class="k">const</span> { statusCode, message, data } = <span class="k">await</span> r.json();
+<span class="c">// 201 "Release received and queued for review" — or 200 "Already created" on a retry</span>
+console.log(statusCode, message, data.id, data.videoId, data.status);</code></pre>
+<pre data-tab="python" hidden><code>r = requests.post(
+    <span class="s">"https://server.ansmusic.io/partner/releases"</span>,
+    headers={<span class="s">"x-api-key"</span>: os.environ[<span class="s">"ANS_API_KEY"</span>]},
+    json={
+        <span class="s">"externalId"</span>: <span class="s">"REL-2026-0412"</span>,
+        <span class="s">"title"</span>: <span class="s">"Akashe Batase"</span>,
+        <span class="s">"primaryArtist"</span>: [<span class="s">"Moriom Islam"</span>],
+        <span class="s">"featuringArtists"</span>: [<span class="s">"Moon"</span>],
+        <span class="s">"label"</span>: <span class="s">"TEC Music"</span>,
+        <span class="s">"genre"</span>: [<span class="s">"Pop"</span>],
+        <span class="s">"language"</span>: <span class="s">"Bengali"</span>,
+        <span class="s">"releaseDate"</span>: <span class="s">"2026-10-01T12:00:00Z"</span>,
+        <span class="s">"channel"</span>: <span class="s">"MoriomIslamVEVO"</span>,
+        <span class="s">"explicit"</span>: <span class="n">False</span>,
+        <span class="s">"videoUrl"</span>: file_url,
+        <span class="s">"imageUrl"</span>: cover_url,
+    },
+    timeout=<span class="n">30</span>,
+)
+body = r.json()
+release = body[<span class="s">"data"</span>]
+print(r.status_code, body[<span class="s">"message"</span>], release[<span class="s">"id"</span>], release[<span class="s">"status"</span>])</code></pre>
+<pre data-tab="php" hidden><code><span class="k">$ch</span> = curl_init(<span class="s">'https://server.ansmusic.io/partner/releases'</span>);
+curl_setopt_array(<span class="k">$ch</span>, [
+  CURLOPT_POST           =&gt; <span class="n">true</span>,
+  CURLOPT_RETURNTRANSFER =&gt; <span class="n">true</span>,
+  CURLOPT_HTTPHEADER     =&gt; [<span class="s">'x-api-key: '</span> . getenv(<span class="s">'ANS_API_KEY'</span>), <span class="s">'content-type: application/json'</span>],
+  CURLOPT_POSTFIELDS     =&gt; json_encode([
+    <span class="s">'externalId'</span>    =&gt; <span class="s">'REL-2026-0412'</span>,
+    <span class="s">'title'</span>         =&gt; <span class="s">'Akashe Batase'</span>,
+    <span class="s">'primaryArtist'</span> =&gt; [<span class="s">'Moriom Islam'</span>],
+    <span class="s">'label'</span>         =&gt; <span class="s">'TEC Music'</span>,
+    <span class="s">'genre'</span>         =&gt; [<span class="s">'Pop'</span>],
+    <span class="s">'language'</span>      =&gt; <span class="s">'Bengali'</span>,
+    <span class="s">'releaseDate'</span>   =&gt; <span class="s">'2026-10-01T12:00:00Z'</span>,
+    <span class="s">'videoUrl'</span>      =&gt; <span class="k">$fileUrl</span>,
+    <span class="s">'imageUrl'</span>      =&gt; <span class="k">$coverUrl</span>,
+  ]),
+]);
+<span class="k">$body</span> = json_decode(curl_exec(<span class="k">$ch</span>), <span class="n">true</span>);
+<span class="k">$release</span> = <span class="k">$body</span>[<span class="s">'data'</span>];   <span class="c">// $release['id'], $release['videoId'], $release['status']</span></code></pre>
+          </div>
+
+          <p><strong>Returns</strong> <code>201</code> with the release under <code>data</code>, <code>status: "pending"</code>. On a live key the message is <em>Release received and queued for review</em>; on a test key it says the release is visible through this API only.</p>
+
+          <div class="tw" style="margin:0"><table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>title</code></td><td class="type">string</td><td><span class="req">required</span></td><td>Trimmed.</td></tr>
+              <tr><td><code>primaryArtist</code></td><td class="type">string[]</td><td><span class="req">required</span></td><td>At least one name. A comma-separated string works too.</td></tr>
+              <tr><td><code>videoUrl</code></td><td class="type">url</td><td><span class="req">required</span></td><td>The <code>fileUrl</code> from an upload, or a public URL you host. <code>video</code> is accepted as an alias.</td></tr>
+              <tr><td><code>externalId</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Your own id. Unique per account. See <a href="#idempotency">idempotency</a>.</td></tr>
+              <tr><td><code>imageUrl</code></td><td class="type">url</td><td><span class="opt">optional</span></td><td>Cover art. <code>image</code> and <code>thumbnail</code> are accepted as aliases. See <a href="#media-spec">media requirements</a>.</td></tr>
+              <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
+              <tr><td><code>label</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The label the release belongs to.</td></tr>
+              <tr><td><code>genre</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Your words. We map them to each store's own list at review.</td></tr>
+              <tr><td><code>language</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>What it is sung in.</td></tr>
+              <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>Must carry a timezone — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
+              <tr><td><code>isrc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Yours if you have one; dashes and spaces are stripped, case is upper-cased. Left out, we issue one at approval and tell you.</td></tr>
+              <tr><td><code>channel</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The VEVO channel name it should go to. See <a href="#channels">Channels</a>.</td></tr>
+              <tr><td><code>explicit</code></td><td class="type">boolean</td><td><span class="opt">optional</span></td><td>Whether the content is explicit.</td></tr>
+              <tr><td><code>description</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Shown on the video.</td></tr>
+              <tr><td><code>keywords</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
+              <tr><td><code>composer</code>, <code>producer</code>, <code>editor</code>, <code>musicDirector</code>, <code>copyrightYear</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Credits, as free text.</td></tr>
+            </tbody>
+          </table></div>
+
+          <div class="call" style="margin:0">
+            <p class="cap">Anything else in the body is ignored</p>
+            <p>Deliberately, and it is worth knowing which: <code>status</code>, <code>isApproved</code>, <code>isTest</code> and the rest of the review fields are ours. A release arrives <code>pending</code> whatever you send, and which environment it lands in comes from the key, never from the body.</p>
+          </div>
+        </div>
+      </div>
+
+      <h4 id="idempotency">Send it twice on purpose</h4>
+      <p><code>externalId</code> is your own id, and sending it buys you two things. A repeated call returns the release you already made — same <code>id</code>, <code>200</code> and the message <em>Already created</em> rather than <code>201</code> — instead of creating a second one. And you can address the release by your id everywhere (<code>GET</code>, <code>PATCH</code>, <code>simulate</code>, <code>?externalId=</code>) rather than storing ours.</p>
+      <p class="muted">Without it, a retried request after a timeout creates a second release. With it, retrying is safe — including after a <code>500</code>.</p>
+
+      <h4 id="timezone">releaseDate must carry a timezone</h4>
+      <p><code>2026-10-01T12:00:00Z</code> or <code>2026-10-01T18:00:00+06:00</code>. A date with no zone is read as UTC, and a release meant for six in the evening in Dhaka then goes live at midnight the following day.</p>
+
+      <!-- GET /releases -->
+      <h3 id="list-releases">List releases <a class="anchor" href="#list-releases">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases?updatedSince=2026-09-01T00:00:00Z&amp;page=1&amp;limit=50</span><span class="ep-scope">scope <code>release:read</code> · 300/min</span></div>
+        <div class="ep-body">
+          <div class="tw" style="margin:0"><table>
+            <thead><tr><th>Query</th><th>Type</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>updatedSince</code></td><td class="type">ISO 8601</td><td>Only releases changed at or after this moment. How a dashboard catches up after being offline: everything that changed, nothing that did not.</td></tr>
+              <tr><td><code>externalId</code></td><td class="type">string</td><td>Exact match on your id.</td></tr>
+              <tr><td><code>isrc</code></td><td class="type">string</td><td>Exact match, case-insensitive.</td></tr>
+              <tr><td><code>page</code></td><td class="type">integer</td><td>From 1. Default 1.</td></tr>
+              <tr><td><code>limit</code></td><td class="type">integer</td><td>1–100. Default 50.</td></tr>
+            </tbody>
+          </table></div>
+<pre><code>{
+  <span class="k">"releases"</span>:   [ { …release… }, … ],
+  <span class="k">"page"</span>:       <span class="n">1</span>,
+  <span class="k">"limit"</span>:      <span class="n">50</span>,
+  <span class="k">"total"</span>:      <span class="n">312</span>,
+  <span class="k">"totalPages"</span>: <span class="n">7</span>
+}</code></pre>
+          <p>Most recently updated first. Only releases in your key's environment are ever returned.</p>
+        </div>
+      </div>
+
+      <!-- GET /releases/:id -->
+      <h3 id="get-release">Read one release <a class="anchor" href="#get-release">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:read</code> · 600/min</span></div>
+        <div class="ep-body">
+          <p><code>:id</code> is our <code>id</code>, your <code>externalId</code>, or the numeric <code>videoId</code> — all three work. Returns the <a href="#release-object">release object</a>, or <code>404</code> if it is not yours or not there.</p>
+<pre><code>curl https://server.ansmusic.io/partner/releases/REL-2026-0412 -H <span class="s">"x-api-key: $ANS_API_KEY"</span></code></pre>
+        </div>
+      </div>
+
+      <!-- PATCH /releases/:id -->
+      <h3 id="update-release">Update a release <a class="anchor" href="#update-release">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb patch">PATCH</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:write</code> · 120/min</span></div>
+        <div class="ep-body">
+          <p>Change what you sent, and by doing so hand the release in again. The body takes the same fields as <a href="#create-release">create</a>, all optional: what you send is changed, what you leave out is left alone. At least one field is required.</p>
+<pre><code>curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
+  -H <span class="s">"x-api-key: $ANS_API_KEY"</span> -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{ "imageUrl": "https://cdn.ansmusic.io/uploads/images/image/…-fixed.jpg", "title": "Akashe Batashe" }'</span>
+
+<span class="c">→ 200 "Release updated and returned to review"</span>
+{ <span class="k">"status"</span>: <span class="s">"pending"</span>, <span class="k">"reason"</span>: <span class="n">null</span>, … }</code></pre>
+          <div class="tw" style="margin:0"><table>
+            <thead><tr><th>Release is…</th><th>What an update does</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill warn">needs_fix</span></td><td>Answers the correction. The release returns to <code>pending</code> and <code>reason</code> is cleared.</td></tr>
+              <tr><td><span class="pill">pending</span></td><td>Changes it in place; it stays in review.</td></tr>
+              <tr><td><span class="pill ok">approved</span> <span class="pill ok">delivered</span></td><td>Returns it to review before the change reaches the stores — the stores hold the old record, so an edit is a redelivery. You will see <code>release.updated</code> and later <code>release.approved</code> again; that is one release being corrected, not two.</td></tr>
+              <tr><td><span class="pill bad">rejected</span> <span class="pill bad">taken_down</span></td><td><code>409</code>. These are closed doors. A rejected release cannot be edited or resubmitted; create a new one. For a takedown, write to support.</td></tr>
+            </tbody>
+          </table></div>
+          <p class="muted small"><code>primaryArtist</code> cannot be emptied. An ISRC, once present — issued by us or supplied by you — cannot be changed (<code>409</code>); it is the recording's name. Sending one is allowed only while the release has none.</p>
+        </div>
+      </div>
+
+      <h3 id="lifecycle">Status lifecycle <a class="anchor" href="#lifecycle">#</a></h3>
+      <p>Six statuses. <code>status</code> says which; <code>statusDetail</code> says it in a sentence; <code>reason</code> carries a reviewer's words where there are any.</p>
+      <div class="flow">
+        <div class="st wait"><b>pending</b><span>With us for review. Where every release starts, and where it returns after any edit.</span></div>
+        <div class="st warn"><b>needs_fix</b><span>Sent back. <code>reason</code> says what. Answer with <code>PATCH</code> and it returns to review.</span></div>
+        <div class="st ok"><b>approved</b><span>Accepted, on its way to the stores. The ISRC is issued at this moment if you did not send one.</span></div>
+        <div class="st ok"><b>delivered</b><span>Live. <code>youtubeVideoId</code> and <code>videoUrl</code> are set.</span></div>
+        <div class="st bad"><b>rejected</b><span><code>reason</code> says why. Final: cannot be edited or resubmitted.</span></div>
+        <div class="st bad"><b>taken_down</b><span>Removed from the stores.</span></div>
+      </div>
+      <p>The ordinary path is <code>pending → approved → delivered</code>. A correction inserts <code>needs_fix → pending</code> before that, as many times as it takes. Each move is a <a href="#events">webhook event</a>.</p>
+
+      <h4 id="we-may-edit">We may edit what you send, and we will tell you</h4>
+      <p>A description a store will not take, a genre that has to be mapped to the one that store actually has, a typo in a title — these are corrected here rather than sent back to you, because sending one back costs a release its date. Whenever a descriptive field changes you get <code>release.updated</code>, carrying the release as it now stands. Write it back into your catalogue: from that point ours is what the stores receive, and a difference between the two surfaces on a statement rather than as an error.</p>
+
+      <h4 id="isrc-policy">ISRCs</h4>
+      <p>Send your own if you have one; it is kept exactly and never replaced. Leave it out and we issue one from our own range when the release is approved — you get <code>release.isrc_assigned</code> with the code, and <code>isrcAssignedByAns</code> is true from then on. A code that is already in use anywhere in our catalogue is refused at creation.</p>
+
+      <h3 id="media-spec">Media requirements <a class="anchor" href="#media-spec">#</a></h3>
+      <p>Every master is probed at submission and checked against the VEVO delivery specification before a reviewer sees it. A file outside these limits is sent back with the exact measurement in <code>reason</code>, so it is cheaper to check on your side first.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Video</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Container</td><td>MP4 (<code>.mp4</code>). No MOV, MKV or AVI.</td></tr>
+          <tr><td>Codec</td><td>H.264. Nothing else is delivered.</td></tr>
+          <tr><td>Resolution</td><td>Landscape only. Longest edge at least 1920&nbsp;px (1920×1080 or better; 4K welcome). Vertical video is not distributed.</td></tr>
+          <tr><td>Aspect ratio</td><td>16:9, 1.85:1, 2:1, 2.35:1, 2.39:1 or 2.4:1. Anything else is flagged.</td></tr>
+          <tr><td>Frame rate</td><td>At least 23.98 fps. Constant, progressive — interlaced masters are refused.</td></tr>
+          <tr><td>Bit rate</td><td>At least 7,500 kb/s. 20,000 kb/s or more recommended.</td></tr>
+          <tr><td>File size</td><td>Up to 3&nbsp;GB.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="tw"><table>
+        <thead><tr><th>Audio</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Codec</td><td>AAC. An audio track is required.</td></tr>
+          <tr><td>Channels</td><td>Stereo. Mono is flagged; more than two channels is refused.</td></tr>
+          <tr><td>Sample rate</td><td>At least 44.1&nbsp;kHz. 48&nbsp;kHz is fine.</td></tr>
+          <tr><td>Bit rate</td><td>320 kb/s recommended.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="tw"><table>
+        <thead><tr><th>Artwork</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Format</td><td>JPEG or PNG, RGB.</td></tr>
+          <tr><td>Size</td><td>1920×1080 or larger, 16:9 — a still frame from the video is ideal. No borders, no text that is not part of the artwork.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="webhooks">
+      <h2><span class="num">07</span>Webhooks</h2>
+      <p class="lead">Set a URL once and we call you whenever anything changes — including when a reviewer here approves something, which is the case you cannot poll for usefully.</p>
+
+      <p>Every delivery is a <code>POST</code> with a JSON body, signed with a per-key secret over a timestamp and the body, in the scheme Stripe and GitHub use. Reply <code>2xx</code> quickly and do the work afterwards; we retry four times over about a minute, then stop — and nothing is lost, because everything a webhook carries is also readable from the API.</p>
+
+      <h3 id="payload">The payload <a class="anchor" href="#payload">#</a></h3>
+      <div class="code"><pre><code><span class="c">POST https://your-system.example.com/ans/webhook</span>
+<span class="h">content-type</span>:    application/json
+<span class="h">user-agent</span>:      ANSMusic-Webhooks/1
+<span class="h">x-ans-timestamp</span>: 1789540800
+<span class="h">x-ans-signature</span>: v1=5f1a9c…
+
+{
+  <span class="k">"id"</span>:          <span class="s">"evt_9d2c4b1e7f0a4c8e9b3d6a1f2e5c7b90"</span>,
+  <span class="k">"event"</span>:       <span class="s">"release.approved"</span>,
+  <span class="k">"environment"</span>: <span class="s">"live"</span>,
+  <span class="k">"sentAt"</span>:      <span class="s">"2026-09-15T12:41:07.512Z"</span>,
+  <span class="k">"data"</span>:        { …the release object, or the channel object… }
+}</code></pre></div>
+      <div class="tw"><table>
+        <thead><tr><th>Field</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>One per event, <strong>the same on every retry</strong>. Deduplicate on it: a retry after a slow <code>2xx</code> is the ordinary case, not the exception.</td></tr>
+          <tr><td><code>event</code></td><td>One of the <a href="#events">events</a> below.</td></tr>
+          <tr><td><code>environment</code></td><td><code>live</code> or <code>test</code> — the environment of the key the webhook belongs to.</td></tr>
+          <tr><td><code>sentAt</code></td><td>When the event happened, UTC.</td></tr>
+          <tr><td><code>data</code></td><td>The full <a href="#release-object">release object</a> for <code>release.*</code>, the <a href="#channel-object">channel object</a> for <code>channel.*</code>. The same shape a <code>GET</code> returns, so the two never disagree.</td></tr>
+        </tbody>
+      </table></div>
+
+      <!-- PUT /webhook -->
+      <h3 id="set-webhook">Set the webhook <a class="anchor" href="#set-webhook">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb put">PUT</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 20/min</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"url"</span>: <span class="s">"https://your-system.example.com/ans/webhook"</span> }
+
+<span class="c">→ 200 "Webhook set"</span>
+{
+  <span class="k">"url"</span>:           <span class="s">"https://your-system.example.com/ans/webhook"</span>,
+  <span class="k">"secret"</span>:        <span class="s">"whsec_9f3c…"</span>,
+  <span class="k">"secretRotated"</span>: <span class="n">true</span>,
+  <span class="k">"note"</span>:          <span class="s">"Store this secret now — it is not shown again, and it is NOT your API key. …"</span>
+}</code></pre>
+          <p>The URL must be <code>https</code>. The first call mints a signing secret and returns it <strong>once</strong>. Calling again with a different URL — correcting a typo — leaves the existing secret alone, so a verifier that is already live keeps working: <code>secret</code> comes back <code>null</code> and <code>secretRotated: false</code>.</p>
+          <p>To mint a new secret on purpose, send <code>{ "url": "…", "rotateSecret": true }</code>. To remove the webhook, send <code>{ "url": "" }</code>.</p>
+          <div class="call warn" style="margin:0">
+            <p class="cap">The signing secret is not your API key</p>
+            <p>They are two different credentials. The API key (<code>ans_live_…</code>) is what you send us. The signing secret (<code>whsec_…</code>) is what we sign with, and it exists only in the response to this <code>PUT</code>. Verifying a delivery with the API key produces a signature that never matches, on every event, with nothing to say why — which looks exactly like a webhook that is not connected.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ep">
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 60/min</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"url"</span>: <span class="s">"https://your-system.example.com/ans/webhook"</span>, <span class="k">"secretSet"</span>: <span class="n">true</span> }</code></pre>
+          <p>What is configured. The secret itself is never returned — only whether one exists.</p>
+        </div>
+      </div>
+
+      <!-- POST /webhook/test -->
+      <h3 id="test-webhook">Test the webhook <a class="anchor" href="#test-webhook">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/webhook/test</span><span class="ep-scope">scope <code>webhook:manage</code> · 10/min</span></div>
+        <div class="ep-body">
+          <p>Sends one signed <code>webhook.test</code> event to your URL immediately and tells you what your server did with it. No body. Use it to get verification working before you create anything.</p>
+<pre><code>{
+  <span class="k">"url"</span>:            <span class="s">"https://your-system.example.com/ans/webhook"</span>,
+  <span class="k">"delivered"</span>:      <span class="n">false</span>,
+  <span class="k">"responseStatus"</span>: <span class="n">401</span>,
+  <span class="k">"error"</span>:          <span class="s">"Your endpoint answered 401."</span>,
+  <span class="k">"sentBody"</span>:       { <span class="k">"id"</span>: <span class="s">"evt_…"</span>, <span class="k">"event"</span>: <span class="s">"webhook.test"</span>, <span class="k">"environment"</span>: <span class="s">"test"</span>, <span class="k">"sentAt"</span>: <span class="s">"…"</span>, <span class="k">"data"</span>: { <span class="k">"message"</span>: <span class="s">"If you can read this and the signature checked out, you are done."</span> } }
+}</code></pre>
+          <p class="muted small"><code>responseStatus</code> is your server's status code; it is <code>null</code> when we could not reach you at all, and <code>error</code> then says why — DNS, refused, certificate, or timeout. A <code>401</code> here almost always means you verified with the API key instead of the secret. Ten calls a minute, because it makes us call your server on demand.</p>
+        </div>
+      </div>
+
+      <h3 id="events">Events <a class="anchor" href="#events">#</a></h3>
+      <div class="tw"><table>
+        <thead><tr><th>Event</th><th>Sent when</th><th><code>data</code></th></tr></thead>
+        <tbody>
+          <tr><td><code>release.created</code></td><td>A release is created through this API and enters review.</td><td>release</td></tr>
+          <tr><td><code>release.needs_fix</code></td><td>A reviewer sends it back. <code>data.reason</code> says what to change.</td><td>release</td></tr>
+          <tr><td><code>release.approved</code></td><td>A reviewer accepts it. Sent again if it is edited and re-approved.</td><td>release</td></tr>
+          <tr><td><code>release.isrc_assigned</code></td><td>We issue an ISRC, at approval. Not sent when you supplied your own.</td><td>release</td></tr>
+          <tr><td><code>release.delivered</code></td><td>It is live. <code>data.youtubeVideoId</code> and <code>data.videoUrl</code> are set.</td><td>release</td></tr>
+          <tr><td><code>release.rejected</code></td><td>A reviewer refuses it. <code>data.reason</code> says why. Final.</td><td>release</td></tr>
+          <tr><td><code>release.taken_down</code></td><td>It is removed from the stores.</td><td>release</td></tr>
+          <tr><td><code>release.updated</code></td><td>A descriptive field changed — a reviewer's edit, or your own <code>PATCH</code> — without a change of status, or an approved release returned to review for an edit.</td><td>release</td></tr>
+          <tr><td><code>channel.approved</code></td><td>A requested VEVO channel is set up. <code>data.channelUrl</code> is the live URL.</td><td>channel</td></tr>
+          <tr><td><code>channel.rejected</code></td><td>A requested channel is refused.</td><td>channel</td></tr>
+          <tr><td><code>webhook.test</code></td><td>Only by <code>POST /webhook/test</code>. Never by a real change.</td><td><code>{ message }</code></td></tr>
+        </tbody>
+      </table></div>
+      <p class="muted small">Events fire from wherever the change was made — our console, this API, a bulk action — so you hear about everything, not only what you did yourself.</p>
+
+      <h3 id="verify">Verifying signatures <a class="anchor" href="#verify">#</a></h3>
+      <p>Compute HMAC-SHA256 over <code>"&lt;x-ans-timestamp&gt;.&lt;raw body&gt;"</code> with your signing secret, hex-encode it, prefix <code>v1=</code>, and compare in constant time to <code>x-ans-signature</code>. Use the <strong>raw request body</strong> — bytes as received — not a re-serialised object. Refuse a timestamp more than five minutes old, so a captured delivery cannot be replayed later.</p>
+
+      <div class="code tabbed" data-tabs>
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-tab="node">Node.js</button>
+          <button role="tab" aria-selected="false" data-tab="python">Python</button>
+          <button role="tab" aria-selected="false" data-tab="php">PHP</button>
+        </div>
+<pre data-tab="node"><code><span class="k">import</span> crypto <span class="k">from</span> <span class="s">'node:crypto'</span>;
+<span class="k">import</span> express <span class="k">from</span> <span class="s">'express'</span>;
+
+<span class="k">const</span> SECRET = process.env.ANS_WEBHOOK_SECRET;   <span class="c">// whsec_…  (not the API key)</span>
+<span class="k">const</span> seen = <span class="k">new</span> Set();                          <span class="c">// swap for your store</span>
+
+<span class="k">const</span> app = express();
+app.post(<span class="s">'/ans/webhook'</span>, express.raw({ type: <span class="s">'application/json'</span> }), (req, res) =&gt; {
+  <span class="k">const</span> ts  = req.get(<span class="s">'x-ans-timestamp'</span>) ?? <span class="s">''</span>;
+  <span class="k">const</span> sig = req.get(<span class="s">'x-ans-signature'</span>) ?? <span class="s">''</span>;
+  <span class="k">const</span> raw = req.body;                          <span class="c">// Buffer — bytes as received</span>
+
+  <span class="k">const</span> expected = <span class="s">'v1='</span> + crypto.createHmac(<span class="s">'sha256'</span>, SECRET).update(<span class="s">`${ts}.`</span>).update(raw).digest(<span class="s">'hex'</span>);
+  <span class="k">const</span> fresh = Math.abs(Date.now() / <span class="n">1000</span> - Number(ts)) &lt; <span class="n">300</span>;
+  <span class="k">const</span> valid = sig.length === expected.length &amp;&amp; crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  <span class="k">if</span> (!valid || !fresh) <span class="k">return</span> res.status(<span class="n">401</span>).end();
+
+  <span class="k">const</span> evt = JSON.parse(raw.toString(<span class="s">'utf8'</span>));
+  <span class="k">if</span> (seen.has(evt.id)) <span class="k">return</span> res.status(<span class="n">200</span>).end();   <span class="c">// a retry — already done</span>
+  seen.add(evt.id);
+
+  res.status(<span class="n">200</span>).end();                          <span class="c">// answer first, work after</span>
+  setImmediate(() =&gt; handle(evt));
+});
+
+<span class="k">function</span> handle({ event, data }) {
+  <span class="k">switch</span> (event) {
+    <span class="k">case</span> <span class="s">'release.needs_fix'</span>:      <span class="c">/* show data.reason, let somebody fix it, PATCH */</span> <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">'release.isrc_assigned'</span>:  <span class="c">/* write data.isrc into your catalogue */</span> <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">'release.updated'</span>:        <span class="c">/* copy the descriptive fields back */</span> <span class="k">break</span>;
+    <span class="k">case</span> <span class="s">'release.delivered'</span>:      <span class="c">/* data.videoUrl is live */</span> <span class="k">break</span>;
+  }
+}</code></pre>
+<pre data-tab="python" hidden><code><span class="k">import</span> hmac, hashlib, json, os, time
+<span class="k">from</span> flask <span class="k">import</span> Flask, request, abort
+
+SECRET = os.environ[<span class="s">"ANS_WEBHOOK_SECRET"</span>].encode()   <span class="c"># whsec_…  (not the API key)</span>
+app = Flask(__name__)
+
+@app.post(<span class="s">"/ans/webhook"</span>)
+<span class="k">def</span> webhook():
+    ts  = request.headers.get(<span class="s">"x-ans-timestamp"</span>, <span class="s">""</span>)
+    sig = request.headers.get(<span class="s">"x-ans-signature"</span>, <span class="s">""</span>)
+    raw = request.get_data()                       <span class="c"># bytes as received</span>
+
+    expected = <span class="s">"v1="</span> + hmac.new(SECRET, f<span class="s">"{ts}."</span>.encode() + raw, hashlib.sha256).hexdigest()
+    fresh = abs(time.time() - float(ts <span class="k">or</span> <span class="n">0</span>)) &lt; <span class="n">300</span>
+    <span class="k">if</span> <span class="k">not</span> (hmac.compare_digest(sig, expected) <span class="k">and</span> fresh):
+        abort(<span class="n">401</span>)
+
+    evt = json.loads(raw)
+    <span class="k">if</span> already_handled(evt[<span class="s">"id"</span>]):                 <span class="c"># your store</span>
+        <span class="k">return</span> <span class="s">""</span>, <span class="n">200</span>
+    enqueue(evt)                                   <span class="c"># answer first, work after</span>
+    <span class="k">return</span> <span class="s">""</span>, <span class="n">200</span></code></pre>
+<pre data-tab="php" hidden><code><span class="k">$secret</span> = getenv(<span class="s">'ANS_WEBHOOK_SECRET'</span>);          <span class="c">// whsec_…  (not the API key)</span>
+<span class="k">$ts</span>  = <span class="k">$_SERVER</span>[<span class="s">'HTTP_X_ANS_TIMESTAMP'</span>] ?? <span class="s">''</span>;
+<span class="k">$sig</span> = <span class="k">$_SERVER</span>[<span class="s">'HTTP_X_ANS_SIGNATURE'</span>] ?? <span class="s">''</span>;
+<span class="k">$raw</span> = file_get_contents(<span class="s">'php://input'</span>);        <span class="c">// bytes as received</span>
+
+<span class="k">$expected</span> = <span class="s">'v1='</span> . hash_hmac(<span class="s">'sha256'</span>, <span class="k">$ts</span> . <span class="s">'.'</span> . <span class="k">$raw</span>, <span class="k">$secret</span>);
+<span class="k">$fresh</span>    = abs(time() - (int) <span class="k">$ts</span>) &lt; <span class="n">300</span>;
+<span class="k">if</span> (!hash_equals(<span class="k">$expected</span>, <span class="k">$sig</span>) || !<span class="k">$fresh</span>) { http_response_code(<span class="n">401</span>); exit; }
+
+<span class="k">$evt</span> = json_decode(<span class="k">$raw</span>, <span class="n">true</span>);
+<span class="k">if</span> (alreadyHandled(<span class="k">$evt</span>[<span class="s">'id'</span>])) { http_response_code(<span class="n">200</span>); exit; }
+http_response_code(<span class="n">200</span>);                       <span class="c">// answer first…</span>
+fastcgi_finish_request();                       <span class="c">// …work after</span>
+handle(<span class="k">$evt</span>);</code></pre>
+      </div>
+
+      <h3 id="delivery">Delivery, retries and catching up <a class="anchor" href="#delivery">#</a></h3>
+      <ul>
+        <li><strong>Timeout</strong> — 8 seconds per attempt. Answer <code>2xx</code> immediately and do the work on a queue.</li>
+        <li><strong>Retries</strong> — four attempts: immediately, then after 2&nbsp;s, 15&nbsp;s and 60&nbsp;s. Any non-2xx or timeout is retried; the same <code>id</code> is sent each time.</li>
+        <li><strong>Order</strong> — events are sent as they happen, but retries mean they can arrive out of order. Trust <code>data.status</code> and <code>data.updatedAt</code> over the sequence you received them in.</li>
+        <li><strong>After an outage</strong> — <code>GET /partner/releases?updatedSince=&lt;when you went down&gt;</code> returns everything that changed. There is no replay endpoint because none is needed: every event's content is the current state of the release.</li>
+        <li><strong>One URL per key</strong> — a live key and a test key each have their own webhook and their own secret.</li>
+      </ul>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="channels">
+      <h2><span class="num">08</span>VEVO channels</h2>
+      <p class="lead">A channel is requested, not created: we review it and set it up with VEVO. You see <code>pending</code>, then <code>approved</code> with the live URL, or <code>rejected</code>.</p>
+
+      <h3 id="channel-object">The channel object <a class="anchor" href="#channel-object">#</a></h3>
+      <div class="code"><pre><code>{
+  <span class="k">"id"</span>:               <span class="s">"6a92b33eb102b7a5f24dfe70"</span>,
+  <span class="k">"channelName"</span>:      <span class="s">"MoriomIslamVEVO"</span>,
+  <span class="k">"status"</span>:           <span class="s">"approved"</span>,
+  <span class="k">"channelUrl"</span>:       <span class="s">"https://www.youtube.com/channel/UC…"</span>,
+  <span class="k">"youtubeChannelId"</span>: <span class="s">"UC…"</span>,
+  <span class="k">"createdAt"</span>:        <span class="s">"2026-08-29T10:23:58.247Z"</span>,
+  <span class="k">"updatedAt"</span>:        <span class="s">"2026-09-02T08:11:40.003Z"</span>
+}</code></pre></div>
+      <p class="muted small"><code>status</code> is <code>pending</code>, <code>approved</code> or <code>rejected</code>. <code>channelUrl</code> and <code>youtubeChannelId</code> are null until the channel exists on YouTube.</p>
+
+      <!-- POST /channels -->
+      <h3 id="request-channel">Request a channel <a class="anchor" href="#request-channel">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:write</code> · 30/min</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"channelName"</span>: <span class="s">"MoriomIslamVEVO"</span>, <span class="k">"artistName"</span>: <span class="s">"Moriom Islam"</span> }
+
+<span class="c">→ 201 "Channel request received and queued for review"</span>
+{ <span class="k">"id"</span>: <span class="s">"…"</span>, <span class="k">"channelName"</span>: <span class="s">"MoriomIslamVEVO"</span>, <span class="k">"status"</span>: <span class="s">"pending"</span>, <span class="k">"channelUrl"</span>: <span class="n">null</span>, … }</code></pre>
+          <div class="tw" style="margin:0"><table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>channelName</code></td><td class="type">string</td><td><span class="req">required</span></td><td>The VEVO channel name, e.g. <code>ArtistNameVEVO</code>.</td></tr>
+              <tr><td><code>artistName</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The artist the channel is for.</td></tr>
+              <tr><td><code>description</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Filled from YouTube if you leave it out and the channel already exists there.</td></tr>
+              <tr><td><code>keywords</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
+            </tbody>
+          </table></div>
+          <p><strong>Approved immediately.</strong> If the name you ask for is already an approved channel here — the same artist delivered by more than one label is ordinary — the request is approved on arrival: <code>201</code>, <code>status: "approved"</code>, and the message says so. Nothing to wait for.</p>
+          <p><strong><code>409</code>, you already asked.</strong> Requesting a name you already hold returns <code>409</code> and a message naming the channel and its current state, rather than a second row. Case, spaces and punctuation are ignored in that comparison: <code>ArtistNameVEVO</code>, <code>artistnamevevo</code> and <code>Artist Name VEVO</code> are one name.</p>
+          <p class="muted small">There is no channel id to send. Every channel carries an internal numeric id that is ours; it is claimed when the request is created and never appears in a request body.</p>
+        </div>
+      </div>
+
+      <!-- GET /channels -->
+      <h3 id="list-channels">List channels <a class="anchor" href="#list-channels">#</a></h3>
+      <div class="ep">
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:read</code> · 120/min</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"channels"</span>: [ { …channel… }, … ] }</code></pre>
+          <p>Every channel on your account, most recently updated first, 200 at a time. Decisions arrive as <code>channel.approved</code> / <code>channel.rejected</code> on your webhook.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="simulate">
+      <h2><span class="num">09</span>Simulate a status</h2>
+      <p class="lead">Test keys only. Move one of your own test releases to any status and watch your webhook receive it.</p>
+      <div class="ep">
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases/<i>:id</i>/simulate</span><span class="ep-scope">scope <code>release:write</code> · 60/min · test keys</span></div>
+        <div class="ep-body">
+<pre><code>{ <span class="k">"status"</span>: <span class="s">"needs_fix"</span>, <span class="k">"reason"</span>: <span class="s">"Cover art is below 1400px."</span> }
+
+<span class="c">→ 200 "Moved to needs_fix"</span>
+{ <span class="k">"status"</span>: <span class="s">"needs_fix"</span>, <span class="k">"reason"</span>: <span class="s">"Cover art is below 1400px."</span>, … }</code></pre>
+          <p><code>status</code> is one of
+            <span class="pill">pending</span> <span class="pill warn">needs_fix</span> <span class="pill ok">approved</span> <span class="pill ok">delivered</span> <span class="pill bad">rejected</span> <span class="pill bad">taken_down</span>.
+            <code>reason</code> is optional and used on <code>needs_fix</code> and <code>rejected</code>; left out, it reads <em>Simulated from the sandbox</em>. <code>:id</code> is our id, your externalId or the videoId.</p>
+          <p>Each move fires the same webhook a real change does, signed the same way. Moving to <code>approved</code> does not issue an ISRC — that happens when a real reviewer approves; send your own if you want to see one on a test release.</p>
+          <p class="muted small">A live key gets <code>403</code>. Live releases move when a reviewer moves them.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="errors">
+      <h2><span class="num">10</span>Errors</h2>
+      <p class="lead">Every failure keeps the envelope, with <code>success: false</code> and a sentence meant to be read.</p>
+      <div class="code"><pre><code>{
+  <span class="k">"success"</span>: <span class="n">false</span>,
+  <span class="k">"message"</span>: <span class="s">"videoUrl is required — send a URL you host, or upload via /partner/uploads first."</span>,
+  <span class="k">"errorMessages"</span>: [
+    { <span class="k">"path"</span>: <span class="s">""</span>, <span class="k">"message"</span>: <span class="s">"videoUrl is required — send a URL you host, or upload via /partner/uploads first."</span> }
+  ]
+}</code></pre></div>
+      <p class="muted small"><code>message</code> is the one to show a human. <code>errorMessages</code> repeats it in a list for the cases where more than one thing is wrong at once.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th class="num">Code</th><th>Means</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td class="num">400</td><td>Something in the request. The message says what.</td><td><em>title is required · primaryArtist is required · The webhook URL must be https. · status must be one of: … · Nothing to change — send at least one field.</em></td></tr>
+          <tr><td class="num">401</td><td>Key missing, wrong, or revoked.</td><td><em>API key is required · Invalid API key · This API key has been revoked.</em></td></tr>
+          <tr><td class="num">403</td><td>Key lacks the scope, is not permitted from this address, or is a live key on a test-only route.</td><td><em>This API key is not permitted from this address. · Only a test key can do this.</em></td></tr>
+          <tr><td class="num">404</td><td>Not yours, or not there — including a release from the other environment.</td><td><em>Release not found · Test release not found</em></td></tr>
+          <tr><td class="num">409</td><td>The request conflicts with what already exists.</td><td><em>You have already submitted ArtistNameVEVO. It is pending. · This release was rejected and cannot be edited… · This release already carries ISRC …</em></td></tr>
+          <tr><td class="num">429</td><td>Too fast. See <a href="#rate-limits">rate limits</a>.</td><td><em>Too many requests. Slow down and try again shortly.</em></td></tr>
+          <tr><td class="num">500</td><td>Ours, not yours. Safe to retry — a create is idempotent on <code>externalId</code>.</td><td></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="rate-limits">
+      <h2><span class="num">11</span>Rate limits</h2>
+      <p class="lead">Counted per key, per minute — so one partner cannot spend another's allowance from a shared cloud address.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Call</th><th class="num">Per minute</th></tr></thead>
+        <tbody>
+          <tr><td>Create a release</td><td class="num">120</td></tr>
+          <tr><td>Update a release</td><td class="num">120</td></tr>
+          <tr><td>List releases</td><td class="num">300</td></tr>
+          <tr><td>Read one release</td><td class="num">600</td></tr>
+          <tr><td>Start an upload</td><td class="num">120</td></tr>
+          <tr><td>Sign upload parts</td><td class="num">600</td></tr>
+          <tr><td>Finish an upload</td><td class="num">120</td></tr>
+          <tr><td>Request a channel</td><td class="num">30</td></tr>
+          <tr><td>List channels</td><td class="num">120</td></tr>
+          <tr><td>Read the webhook</td><td class="num">60</td></tr>
+          <tr><td>Set the webhook</td><td class="num">20</td></tr>
+          <tr><td>Test the webhook</td><td class="num">10</td></tr>
+          <tr><td>Simulate a status (test keys)</td><td class="num">60</td></tr>
+          <tr><td><code>GET /me</code></td><td class="num">—</td></tr>
+        </tbody>
+      </table></div>
+      <p>Every limited response carries <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code> (seconds until the window resets). A <code>429</code> also carries <code>Retry-After</code>. Wait for it rather than retrying immediately — a client that retries a 429 in a loop is the one thing these limits exist to stop.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="endpoint-index">
+      <h2><span class="num">12</span>Endpoint index</h2>
+      <p class="lead">Everything, on one screen. A machine-readable version is in the <a href="openapi.yaml" download>OpenAPI 3.1 document</a>.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Method</th><th>Path</th><th>Scope</th><th>Does</th></tr></thead>
+        <tbody>
+          <tr><td><span class="verb get">GET</span></td><td><code>/partner/me</code></td><td>—</td><td><a href="#authentication">Who this key is</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/uploads</code></td><td><code>upload:write</code></td><td><a href="#upload-start">Start an upload</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/uploads/parts</code></td><td><code>upload:write</code></td><td><a href="#upload-parts">Sign multipart parts</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/uploads/complete</code></td><td><code>upload:write</code></td><td><a href="#upload-complete">Finish a multipart upload</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/releases</code></td><td><code>release:write</code></td><td><a href="#create-release">Create a release</a></td></tr>
+          <tr><td><span class="verb get">GET</span></td><td><code>/partner/releases</code></td><td><code>release:read</code></td><td><a href="#list-releases">List releases</a></td></tr>
+          <tr><td><span class="verb get">GET</span></td><td><code>/partner/releases/:id</code></td><td><code>release:read</code></td><td><a href="#get-release">Read one release</a></td></tr>
+          <tr><td><span class="verb patch">PATCH</span></td><td><code>/partner/releases/:id</code></td><td><code>release:write</code></td><td><a href="#update-release">Update a release</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/releases/:id/simulate</code></td><td><code>release:write</code></td><td><a href="#simulate">Move a test release</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/channels</code></td><td><code>channel:write</code></td><td><a href="#request-channel">Request a VEVO channel</a></td></tr>
+          <tr><td><span class="verb get">GET</span></td><td><code>/partner/channels</code></td><td><code>channel:read</code></td><td><a href="#list-channels">List channels</a></td></tr>
+          <tr><td><span class="verb get">GET</span></td><td><code>/partner/webhook</code></td><td><code>webhook:manage</code></td><td><a href="#set-webhook">Read the webhook</a></td></tr>
+          <tr><td><span class="verb put">PUT</span></td><td><code>/partner/webhook</code></td><td><code>webhook:manage</code></td><td><a href="#set-webhook">Set the webhook</a></td></tr>
+          <tr><td><span class="verb post">POST</span></td><td><code>/partner/webhook/test</code></td><td><code>webhook:manage</code></td><td><a href="#test-webhook">Send a test event</a></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="changelog">
+      <h2><span class="num">13</span>Changelog</h2>
+      <p class="lead">Fields are added, never removed or renamed. Anything that would break a working integration would be a new version on a new path.</p>
+      <div class="log">
+        <div class="entry"><time>15 September 2026</time>
+          <ul>
+            <li><strong>New:</strong> <code>PATCH /partner/releases/:id</code> — update a release and hand it in again. This is how a <code>needs_fix</code> is answered.</li>
+            <li><strong>New:</strong> every webhook carries an <code>id</code> (<code>evt_…</code>), the same across retries, for deduplication.</li>
+            <li><strong>New:</strong> <code>explicit</code> is accepted on create and update as a boolean, and returned as one.</li>
+            <li><strong>Fixed:</strong> <code>reason</code> on a <code>needs_fix</code> release now carries the reviewer's correction message. It was always null.</li>
+            <li><strong>Fixed:</strong> events sent for changes made from the ANS console named the wrong event in several cases — <code>release.created</code> on approval, <code>release.approved</code> on a description edit — and <code>release.isrc_assigned</code> was never sent. Bulk approvals sent nothing. All correct now.</li>
+            <li><code>POST …/simulate</code> accepts the <code>videoId</code> as well as our id and your externalId.</li>
+          </ul>
+        </div>
+        <div class="entry"><time>29 August 2026</time>
+          <ul>
+            <li><code>videoId</code> added to the release object; <code>reference</code> kept as an alias.</li>
+            <li><code>youtubeVideoId</code> added; <code>videoUrl</code> is now a watch link built from it rather than a bare id.</li>
+            <li>The descriptive fields (<code>description</code>, <code>keywords</code>, credits, <code>imageUrl</code>) are returned on reads and carried by webhooks.</li>
+            <li><code>release.updated</code> event added, sent when a reviewer edits a descriptive field.</li>
+            <li><code>channel.approved</code> / <code>channel.rejected</code> are sent — they were listed and never emitted.</li>
+            <li><code>channelUrl</code> and <code>youtubeChannelId</code> populated on channels; a permanently-null <code>reason</code> removed.</li>
+            <li><code>POST /partner/webhook/test</code> added. <code>PUT /partner/webhook</code> no longer rotates the secret unless asked.</li>
+          </ul>
+        </div>
+        <div class="entry"><time>August 2026</time>
+          <ul>
+            <li>v1. Test keys and a sealed sandbox; <code>POST …/simulate</code>. Presigned uploads with multipart. Per-key rate limits. Scoped keys; the IP allowlist. Signed webhooks with retries.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section id="support">
+      <h2><span class="num">14</span>Support</h2>
+      <p class="lead">A test key, a live key, an IP allowlist, a scope you do not have, or something in here that does not match what you see.</p>
+      <p>Write to <a href="mailto:support@ansmusic.io">support@ansmusic.io</a>. Quote the <code>videoId</code> of any release you are asking about and, for a webhook, the event <code>id</code> — we keep ninety days of delivery attempts and can tell you what your server answered.</p>
+      <p class="muted">Status of the API itself: <a href="https://server.ansmusic.io/healthz" rel="noopener">server.ansmusic.io/healthz</a>.</p>
+    </section>
+
+    <footer>
+      <span>© <span id="year">2026</span> ANS Enterprise LLC · 30 N Gould St Ste R, Sheridan, WY 82801, USA</span>
+      <span>ANS Music LLC-FZ · Meydan Grandstand, Dubai</span>
+      <span><a href="https://ansmusic.io" rel="noopener">ansmusic.io</a> · <a href="https://ansbackstage.com/auth/terms-conditions" rel="noopener">Terms</a> · <a href="mailto:support@ansmusic.io">support@ansmusic.io</a></span>
+    </footer>
+  </main>
+
+  <aside class="toc" id="toc" aria-label="On this page">
+    <h5>On this page</h5>
+    <div id="toc-list"></div>
+  </aside>
+</div>
+
+<dialog class="palette" id="palette">
+  <input type="search" id="palette-input" placeholder="Search endpoints, fields, events…" autocomplete="off" spellcheck="false">
+  <div class="results" id="palette-results"></div>
+</dialog>
+
+<script src="app.js" defer></script>
+</body>
+</html>

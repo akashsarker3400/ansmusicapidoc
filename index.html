@@ -211,7 +211,7 @@ echo <span class="k">$me</span>[<span class="s">'company'</span>], <span class="
           <tr><td><code>ans_test_…</code></td><td>test</td><td>The same API, the same responses, the same webhooks. Nothing reaches a reviewer, a store or a report — see <a href="#sandbox">Sandbox</a>.</td></tr>
         </tbody>
       </table></div>
-      <p>Keys do not expire on a timer. They are revoked by a person, on purpose. <code>GET /partner/me</code> tells you which environment and scopes the key you are holding has.</p>
+      <p>Keys are issued only to the technical contact on file for an existing ANS Music account, and sent only to that contact. They do not expire on a timer; they are revoked by a person, on purpose. <code>GET /partner/me</code> tells you which environment and scopes the key you are holding has.</p>
 
       <h3 id="scopes">Scopes <a class="anchor" href="#scopes">#</a></h3>
       <p>A key carries only what it needs. Tell us which of these you use and it is issued accordingly; a call outside the key's scopes is refused with <code>403</code>.</p>
@@ -229,7 +229,7 @@ echo <span class="k">$me</span>[<span class="s">'company'</span>], <span class="
       <p class="muted small"><code>GET /partner/me</code> needs no scope — any valid key may ask who it is.</p>
 
       <h3 id="ip-allowlist">IP allowlist <a class="anchor" href="#ip-allowlist">#</a></h3>
-      <p>Tell us the addresses you call from and the key is restricted to them; a call from anywhere else is refused with <code>403</code> and a message saying so. We read the connecting address through Cloudflare, so a proxy of your own in front of us is fine as long as its egress address is on the list.</p>
+      <p>Tell us the addresses you call from and the key is restricted to them; a call from anywhere else is refused with <code>403</code> and a message saying so. The address checked is the one your request arrives from, so a proxy of your own is fine as long as its egress address is on the list.</p>
 
       <div class="call warn">
         <p class="cap">Keep the key server-side</p>
@@ -278,8 +278,8 @@ curl -X PUT <span class="s">"$UPLOAD_URL"</span> -H <span class="s">"content-typ
   -d <span class="s">'{
     "externalId":    "REL-2026-0412",
     "title":         "Akashe Batase",
-    "primaryArtist": ["Moriom Islam"],
-    "label":         "TEC Music",
+    "primaryArtist": ["Nadia Rain"],
+    "label":         "Sundarban Records",
     "genre":         ["Pop"],
     "language":      "Bengali",
     "releaseDate":   "2026-10-01T12:00:00Z",
@@ -352,7 +352,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
 
       <div class="call warn">
         <p class="cap">Do not POST the file to this API</p>
-        <p>Our hosts sit behind Cloudflare, which refuses any request body over 100&nbsp;MB. No music video gets through that. The presigned URL is a direct route to storage; the API only signs it.</p>
+        <p>Our edge refuses any request body over 100&nbsp;MB, and no music video gets through that. The presigned URL is a direct route to storage; the API only signs it.</p>
       </div>
 
       <p>You can skip this section entirely if you host your own media on a public URL: send it as <code>videoUrl</code> / <code>imageUrl</code> in the release. Both routes are supported and always will be — but a URL you host must stay reachable until the release is delivered, and a private, expiring or IP-restricted link will fail at review.</p>
@@ -494,12 +494,12 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   <span class="k">"status"</span>:            <span class="s">"approved"</span>,
   <span class="k">"statusDetail"</span>:      <span class="s">"Accepted and on its way to the stores."</span>,
   <span class="k">"reason"</span>:            <span class="n">null</span>,
-  <span class="k">"primaryArtist"</span>:     [<span class="s">"Moriom Islam"</span>],
-  <span class="k">"featuringArtists"</span>:  [<span class="s">"Moon"</span>],
-  <span class="k">"label"</span>:             <span class="s">"TEC Music"</span>,
+  <span class="k">"primaryArtist"</span>:     [<span class="s">"Nadia Rain"</span>],
+  <span class="k">"featuringArtists"</span>:  [<span class="s">"Kavi"</span>],
+  <span class="k">"label"</span>:             <span class="s">"Sundarban Records"</span>,
   <span class="k">"genre"</span>:             [<span class="s">"Pop"</span>],
   <span class="k">"releaseDate"</span>:       <span class="s">"2026-10-01T12:00:00.000Z"</span>,
-  <span class="k">"channel"</span>:           <span class="s">"MoriomIslamVEVO"</span>,
+  <span class="k">"channel"</span>:           <span class="s">"NadiaRainVEVO"</span>,
   <span class="k">"youtubeVideoId"</span>:    <span class="n">null</span>,
   <span class="k">"videoUrl"</span>:          <span class="n">null</span>,
   <span class="k">"language"</span>:          <span class="s">"Bengali"</span>,
@@ -564,13 +564,13 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   -d <span class="s">'{
     "externalId":       "REL-2026-0412",
     "title":            "Akashe Batase",
-    "primaryArtist":    ["Moriom Islam"],
-    "featuringArtists": ["Moon"],
-    "label":            "TEC Music",
+    "primaryArtist":    ["Nadia Rain"],
+    "featuringArtists": ["Kavi"],
+    "label":            "Sundarban Records",
     "genre":            ["Pop"],
     "language":         "Bengali",
     "releaseDate":      "2026-10-01T12:00:00Z",
-    "channel":          "MoriomIslamVEVO",
+    "channel":          "NadiaRainVEVO",
     "explicit":         false,
     "videoUrl":         "https://cdn.ansmusic.io/uploads/videos/yourco-master-a1b2c3.mp4",
     "imageUrl":         "https://cdn.ansmusic.io/uploads/images/image/yourco-cover-d4e5f6.jpg"
@@ -581,13 +581,13 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   body: JSON.stringify({
     externalId: <span class="s">'REL-2026-0412'</span>,
     title: <span class="s">'Akashe Batase'</span>,
-    primaryArtist: [<span class="s">'Moriom Islam'</span>],
-    featuringArtists: [<span class="s">'Moon'</span>],
-    label: <span class="s">'TEC Music'</span>,
+    primaryArtist: [<span class="s">'Nadia Rain'</span>],
+    featuringArtists: [<span class="s">'Kavi'</span>],
+    label: <span class="s">'Sundarban Records'</span>,
     genre: [<span class="s">'Pop'</span>],
     language: <span class="s">'Bengali'</span>,
     releaseDate: <span class="s">'2026-10-01T12:00:00Z'</span>,
-    channel: <span class="s">'MoriomIslamVEVO'</span>,
+    channel: <span class="s">'NadiaRainVEVO'</span>,
     explicit: <span class="n">false</span>,
     videoUrl: fileUrl,           <span class="c">// from the upload, or a URL you host</span>
     imageUrl: coverUrl,
@@ -602,13 +602,13 @@ console.log(statusCode, message, data.id, data.videoId, data.status);</code></pr
     json={
         <span class="s">"externalId"</span>: <span class="s">"REL-2026-0412"</span>,
         <span class="s">"title"</span>: <span class="s">"Akashe Batase"</span>,
-        <span class="s">"primaryArtist"</span>: [<span class="s">"Moriom Islam"</span>],
-        <span class="s">"featuringArtists"</span>: [<span class="s">"Moon"</span>],
-        <span class="s">"label"</span>: <span class="s">"TEC Music"</span>,
+        <span class="s">"primaryArtist"</span>: [<span class="s">"Nadia Rain"</span>],
+        <span class="s">"featuringArtists"</span>: [<span class="s">"Kavi"</span>],
+        <span class="s">"label"</span>: <span class="s">"Sundarban Records"</span>,
         <span class="s">"genre"</span>: [<span class="s">"Pop"</span>],
         <span class="s">"language"</span>: <span class="s">"Bengali"</span>,
         <span class="s">"releaseDate"</span>: <span class="s">"2026-10-01T12:00:00Z"</span>,
-        <span class="s">"channel"</span>: <span class="s">"MoriomIslamVEVO"</span>,
+        <span class="s">"channel"</span>: <span class="s">"NadiaRainVEVO"</span>,
         <span class="s">"explicit"</span>: <span class="n">False</span>,
         <span class="s">"videoUrl"</span>: file_url,
         <span class="s">"imageUrl"</span>: cover_url,
@@ -626,8 +626,8 @@ curl_setopt_array(<span class="k">$ch</span>, [
   CURLOPT_POSTFIELDS     =&gt; json_encode([
     <span class="s">'externalId'</span>    =&gt; <span class="s">'REL-2026-0412'</span>,
     <span class="s">'title'</span>         =&gt; <span class="s">'Akashe Batase'</span>,
-    <span class="s">'primaryArtist'</span> =&gt; [<span class="s">'Moriom Islam'</span>],
-    <span class="s">'label'</span>         =&gt; <span class="s">'TEC Music'</span>,
+    <span class="s">'primaryArtist'</span> =&gt; [<span class="s">'Nadia Rain'</span>],
+    <span class="s">'label'</span>         =&gt; <span class="s">'Sundarban Records'</span>,
     <span class="s">'genre'</span>         =&gt; [<span class="s">'Pop'</span>],
     <span class="s">'language'</span>      =&gt; <span class="s">'Bengali'</span>,
     <span class="s">'releaseDate'</span>   =&gt; <span class="s">'2026-10-01T12:00:00Z'</span>,
@@ -985,7 +985,7 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h3 id="channel-object">The channel object <a class="anchor" href="#channel-object">#</a></h3>
       <div class="code"><pre><code>{
   <span class="k">"id"</span>:               <span class="s">"6a92b33eb102b7a5f24dfe70"</span>,
-  <span class="k">"channelName"</span>:      <span class="s">"MoriomIslamVEVO"</span>,
+  <span class="k">"channelName"</span>:      <span class="s">"NadiaRainVEVO"</span>,
   <span class="k">"status"</span>:           <span class="s">"approved"</span>,
   <span class="k">"channelUrl"</span>:       <span class="s">"https://www.youtube.com/channel/UC…"</span>,
   <span class="k">"youtubeChannelId"</span>: <span class="s">"UC…"</span>,
@@ -999,10 +999,10 @@ handle(<span class="k">$evt</span>);</code></pre>
       <div class="ep">
         <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:write</code> · 30/min</span></div>
         <div class="ep-body">
-<pre><code>{ <span class="k">"channelName"</span>: <span class="s">"MoriomIslamVEVO"</span>, <span class="k">"artistName"</span>: <span class="s">"Moriom Islam"</span> }
+<pre><code>{ <span class="k">"channelName"</span>: <span class="s">"NadiaRainVEVO"</span>, <span class="k">"artistName"</span>: <span class="s">"Nadia Rain"</span> }
 
 <span class="c">→ 201 "Channel request received and queued for review"</span>
-{ <span class="k">"id"</span>: <span class="s">"…"</span>, <span class="k">"channelName"</span>: <span class="s">"MoriomIslamVEVO"</span>, <span class="k">"status"</span>: <span class="s">"pending"</span>, <span class="k">"channelUrl"</span>: <span class="n">null</span>, … }</code></pre>
+{ <span class="k">"id"</span>: <span class="s">"…"</span>, <span class="k">"channelName"</span>: <span class="s">"NadiaRainVEVO"</span>, <span class="k">"status"</span>: <span class="s">"pending"</span>, <span class="k">"channelUrl"</span>: <span class="n">null</span>, … }</code></pre>
           <div class="tw" style="margin:0"><table>
             <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
             <tbody>
@@ -1166,7 +1166,6 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">14</span>Support</h2>
       <p class="lead">A test key, a live key, an IP allowlist, a scope you do not have, or something in here that does not match what you see.</p>
       <p>Write to <a href="mailto:support@ansmusic.io">support@ansmusic.io</a>. Quote the <code>videoId</code> of any release you are asking about and, for a webhook, the event <code>id</code> — we keep ninety days of delivery attempts and can tell you what your server answered.</p>
-      <p class="muted">Status of the API itself: <a href="https://server.ansmusic.io/healthz" rel="noopener">server.ansmusic.io/healthz</a>.</p>
     </section>
 
     <footer>

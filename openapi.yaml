@@ -365,7 +365,7 @@ paths:
               type: object
               required: [channelName]
               properties:
-                channelName: { type: string, example: MoriomIslamVEVO }
+                channelName: { type: string, example: NadiaRainVEVO }
                 artistName: { type: string }
                 description: { type: string }
                 keywords:

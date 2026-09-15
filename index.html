@@ -340,7 +340,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
         <li>The same event <code>id</code> delivered twice — confirm your handler does the work once.</li>
         <li>A <code>needs_fix</code> answered with <code>PATCH</code> — confirm your dashboard shows it back in review.</li>
         <li><code>?updatedSince=</code> after leaving your endpoint down for a while — confirm you catch up.</li>
-        <li>A <code>429</code>, by exceeding a limit on purpose — confirm you wait for <code>RateLimit-Reset</code> rather than hammer.</li>
+        <li>A <code>429</code>, by exceeding a limit on purpose (three webhook tests in a minute will do it) — confirm you wait for <code>RateLimit-Reset</code> rather than hammer.</li>
       </ul>
       <p class="muted">Then send us one real release on the live key before switching the rest across.</p>
     </section>
@@ -360,7 +360,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
       <!-- POST /uploads -->
       <h3 id="upload-start">Start an upload <a class="anchor" href="#upload-start">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads</span><span class="ep-scope">scope <code>upload:write</code> · 120/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads</span><span class="ep-scope">scope <code>upload:write</code> · 30/min</span></div>
         <div class="ep-body">
           <div class="tw" style="margin:0"><table>
             <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
@@ -395,7 +395,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
       <!-- POST /uploads/parts -->
       <h3 id="upload-parts">Sign parts <a class="anchor" href="#upload-parts">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/parts</span><span class="ep-scope">scope <code>upload:write</code> · 600/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/parts</span><span class="ep-scope">scope <code>upload:write</code> · 60/min</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"key"</span>: <span class="s">"uploads/videos/…"</span>, <span class="k">"uploadId"</span>: <span class="s">"2~k9Vt…"</span>, <span class="k">"partNumbers"</span>: [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>] }
 
@@ -409,7 +409,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
       <!-- POST /uploads/complete -->
       <h3 id="upload-complete">Finish the upload <a class="anchor" href="#upload-complete">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/complete</span><span class="ep-scope">scope <code>upload:write</code> · 120/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/uploads/complete</span><span class="ep-scope">scope <code>upload:write</code> · 30/min</span></div>
         <div class="ep-body">
 <pre><code>{
   <span class="k">"key"</span>: <span class="s">"uploads/videos/…"</span>, <span class="k">"uploadId"</span>: <span class="s">"2~k9Vt…"</span>,
@@ -550,7 +550,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
       <!-- POST /releases -->
       <h3 id="create-release">Create a release <a class="anchor" href="#create-release">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases</span><span class="ep-scope">scope <code>release:write</code> · 120/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases</span><span class="ep-scope">scope <code>release:write</code> · 60/min</span></div>
         <div class="ep-body">
           <div class="code tabbed" data-tabs style="margin:0">
             <div class="tabs" role="tablist">
@@ -680,7 +680,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <!-- GET /releases -->
       <h3 id="list-releases">List releases <a class="anchor" href="#list-releases">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases?updatedSince=2026-09-01T00:00:00Z&amp;page=1&amp;limit=50</span><span class="ep-scope">scope <code>release:read</code> · 300/min</span></div>
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases?updatedSince=2026-09-01T00:00:00Z&amp;page=1&amp;limit=50</span><span class="ep-scope">scope <code>release:read</code> · 60/min</span></div>
         <div class="ep-body">
           <div class="tw" style="margin:0"><table>
             <thead><tr><th>Query</th><th>Type</th><th>Notes</th></tr></thead>
@@ -706,7 +706,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <!-- GET /releases/:id -->
       <h3 id="get-release">Read one release <a class="anchor" href="#get-release">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:read</code> · 600/min</span></div>
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:read</code> · 120/min</span></div>
         <div class="ep-body">
           <p><code>:id</code> is our <code>id</code>, your <code>externalId</code>, or the numeric <code>videoId</code> — all three work. Returns the <a href="#release-object">release object</a>, or <code>404</code> if it is not yours or not there.</p>
 <pre><code>curl https://server.ansmusic.io/partner/releases/REL-2026-0412 -H <span class="s">"x-api-key: $ANS_API_KEY"</span></code></pre>
@@ -716,7 +716,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <!-- PATCH /releases/:id -->
       <h3 id="update-release">Update a release <a class="anchor" href="#update-release">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb patch">PATCH</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:write</code> · 120/min</span></div>
+        <div class="ep-head"><span class="verb patch">PATCH</span><span class="ep-path">/partner/releases/<i>:id</i></span><span class="ep-scope">scope <code>release:write</code> · 60/min</span></div>
         <div class="ep-body">
           <p>Change what you sent, and by doing so hand the release in again. The body takes the same fields as <a href="#create-release">create</a>, all optional: what you send is changed, what you leave out is left alone. At least one field is required.</p>
 <pre><code>curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
@@ -823,7 +823,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <!-- PUT /webhook -->
       <h3 id="set-webhook">Set the webhook <a class="anchor" href="#set-webhook">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb put">PUT</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 20/min</span></div>
+        <div class="ep-head"><span class="verb put">PUT</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 5/min</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"url"</span>: <span class="s">"https://your-system.example.com/ans/webhook"</span> }
 
@@ -844,7 +844,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       </div>
 
       <div class="ep">
-        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 60/min</span></div>
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/webhook</span><span class="ep-scope">scope <code>webhook:manage</code> · 20/min</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"url"</span>: <span class="s">"https://your-system.example.com/ans/webhook"</span>, <span class="k">"secretSet"</span>: <span class="n">true</span> }</code></pre>
           <p>What is configured. The secret itself is never returned — only whether one exists.</p>
@@ -854,7 +854,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <!-- POST /webhook/test -->
       <h3 id="test-webhook">Test the webhook <a class="anchor" href="#test-webhook">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/webhook/test</span><span class="ep-scope">scope <code>webhook:manage</code> · 10/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/webhook/test</span><span class="ep-scope">scope <code>webhook:manage</code> · 3/min</span></div>
         <div class="ep-body">
           <p>Sends one signed <code>webhook.test</code> event to your URL immediately and tells you what your server did with it. No body. Use it to get verification working before you create anything.</p>
 <pre><code>{
@@ -864,7 +864,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
   <span class="k">"error"</span>:          <span class="s">"Your endpoint answered 401."</span>,
   <span class="k">"sentBody"</span>:       { <span class="k">"id"</span>: <span class="s">"evt_…"</span>, <span class="k">"event"</span>: <span class="s">"webhook.test"</span>, <span class="k">"environment"</span>: <span class="s">"test"</span>, <span class="k">"sentAt"</span>: <span class="s">"…"</span>, <span class="k">"data"</span>: { <span class="k">"message"</span>: <span class="s">"If you can read this and the signature checked out, you are done."</span> } }
 }</code></pre>
-          <p class="muted small"><code>responseStatus</code> is your server's status code; it is <code>null</code> when we could not reach you at all, and <code>error</code> then says why — DNS, refused, certificate, or timeout. A <code>401</code> here almost always means you verified with the API key instead of the secret. Ten calls a minute, because it makes us call your server on demand.</p>
+          <p class="muted small"><code>responseStatus</code> is your server's status code; it is <code>null</code> when we could not reach you at all, and <code>error</code> then says why — DNS, refused, certificate, or timeout. A <code>401</code> here almost always means you verified with the API key instead of the secret. Three calls a minute, because it makes us call your server on demand.</p>
         </div>
       </div>
 
@@ -997,7 +997,7 @@ handle(<span class="k">$evt</span>);</code></pre>
       <!-- POST /channels -->
       <h3 id="request-channel">Request a channel <a class="anchor" href="#request-channel">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:write</code> · 30/min</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:write</code> · 10/min</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"channelName"</span>: <span class="s">"NadiaRainVEVO"</span>, <span class="k">"artistName"</span>: <span class="s">"Nadia Rain"</span> }
 
@@ -1021,7 +1021,7 @@ handle(<span class="k">$evt</span>);</code></pre>
       <!-- GET /channels -->
       <h3 id="list-channels">List channels <a class="anchor" href="#list-channels">#</a></h3>
       <div class="ep">
-        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:read</code> · 120/min</span></div>
+        <div class="ep-head"><span class="verb get">GET</span><span class="ep-path">/partner/channels</span><span class="ep-scope">scope <code>channel:read</code> · 30/min</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"channels"</span>: [ { …channel… }, … ] }</code></pre>
           <p>Every channel on your account, most recently updated first, 200 at a time. Decisions arrive as <code>channel.approved</code> / <code>channel.rejected</code> on your webhook.</p>
@@ -1034,7 +1034,7 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">09</span>Simulate a status</h2>
       <p class="lead">Test keys only. Move one of your own test releases to any status and watch your webhook receive it.</p>
       <div class="ep">
-        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases/<i>:id</i>/simulate</span><span class="ep-scope">scope <code>release:write</code> · 60/min · test keys</span></div>
+        <div class="ep-head"><span class="verb post">POST</span><span class="ep-path">/partner/releases/<i>:id</i>/simulate</span><span class="ep-scope">scope <code>release:write</code> · 30/min · test keys</span></div>
         <div class="ep-body">
 <pre><code>{ <span class="k">"status"</span>: <span class="s">"needs_fix"</span>, <span class="k">"reason"</span>: <span class="s">"Cover art is below 1400px."</span> }
 
@@ -1079,24 +1079,25 @@ handle(<span class="k">$evt</span>);</code></pre>
     <!-- ══════════════════════════════════════════════════════════════ -->
     <section id="rate-limits">
       <h2><span class="num">11</span>Rate limits</h2>
-      <p class="lead">Counted per key, per minute — so one partner cannot spend another's allowance from a shared cloud address.</p>
+      <p class="lead">Counted per key, per minute — so one partner cannot spend another's allowance from a shared cloud address. Sized to the work: fifty releases pushed at once fit inside a minute of creates; a two-gigabyte master is one call for its part URLs; a dashboard catching up uses <code>updatedSince</code> with a hundred per page, not a read per release.</p>
       <div class="tw"><table>
         <thead><tr><th>Call</th><th class="num">Per minute</th></tr></thead>
         <tbody>
-          <tr><td>Create a release</td><td class="num">120</td></tr>
-          <tr><td>Update a release</td><td class="num">120</td></tr>
-          <tr><td>List releases</td><td class="num">300</td></tr>
-          <tr><td>Read one release</td><td class="num">600</td></tr>
-          <tr><td>Start an upload</td><td class="num">120</td></tr>
-          <tr><td>Sign upload parts</td><td class="num">600</td></tr>
-          <tr><td>Finish an upload</td><td class="num">120</td></tr>
-          <tr><td>Request a channel</td><td class="num">30</td></tr>
-          <tr><td>List channels</td><td class="num">120</td></tr>
-          <tr><td>Read the webhook</td><td class="num">60</td></tr>
-          <tr><td>Set the webhook</td><td class="num">20</td></tr>
-          <tr><td>Test the webhook</td><td class="num">10</td></tr>
-          <tr><td>Simulate a status (test keys)</td><td class="num">60</td></tr>
-          <tr><td><code>GET /me</code></td><td class="num">—</td></tr>
+          <tr><td>Create a release</td><td class="num">60</td></tr>
+          <tr><td>Update a release</td><td class="num">60</td></tr>
+          <tr><td>List releases</td><td class="num">60</td></tr>
+          <tr><td>Read one release</td><td class="num">120</td></tr>
+          <tr><td>Start an upload</td><td class="num">30</td></tr>
+          <tr><td>Sign upload parts</td><td class="num">60</td></tr>
+          <tr><td>Finish an upload</td><td class="num">30</td></tr>
+          <tr><td>Request a channel</td><td class="num">10</td></tr>
+          <tr><td>List channels</td><td class="num">30</td></tr>
+          <tr><td>Read the webhook</td><td class="num">20</td></tr>
+          <tr><td>Set the webhook</td><td class="num">5</td></tr>
+          <tr><td>Test the webhook</td><td class="num">3</td></tr>
+          <tr><td>Simulate a status (test keys)</td><td class="num">30</td></tr>
+          <tr><td><code>GET /me</code></td><td class="num">60</td></tr>
+          <tr><td><strong>Everything together</strong></td><td class="num"><strong>300</strong></td></tr>
         </tbody>
       </table></div>
       <p>Every limited response carries <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code> (seconds until the window resets). A <code>429</code> also carries <code>Retry-After</code>. Wait for it rather than retrying immediately — a client that retries a 429 in a loop is the one thing these limits exist to stop.</p>
@@ -1132,6 +1133,11 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">13</span>Changelog</h2>
       <p class="lead">Fields are added, never removed or renamed. Anything that would break a working integration would be a new version on a new path.</p>
       <div class="log">
+        <div class="entry"><time>16 September 2026</time>
+          <ul>
+            <li><strong>Changed:</strong> rate limits lowered to match real use, and a ceiling of 300 calls a minute across all routes added. See <a href="#rate-limits">Rate limits</a>. A client inside the old limits and outside the new ones was already in a loop.</li>
+          </ul>
+        </div>
         <div class="entry"><time>15 September 2026</time>
           <ul>
             <li><strong>New:</strong> <code>PATCH /partner/releases/:id</code> — update a release and hand it in again. This is how a <code>needs_fix</code> is answered.</li>

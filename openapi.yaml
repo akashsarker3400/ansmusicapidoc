@@ -6,7 +6,9 @@ info:
   description: |
     Push releases, follow every status change with signed webhooks, and request
     VEVO channels. Every response is one envelope: `{ statusCode, success,
-    message, data }`. Human-readable documentation: https://apidoc.ansmusic.io
+    message, data }`. Rate limits are per key per minute, with a ceiling of
+    300 calls a minute across all routes. Human-readable documentation:
+    https://apidoc.ansmusic.io
   contact:
     name: ANS Music support
     email: support@ansmusic.io
@@ -56,7 +58,7 @@ paths:
         and a multipart upload otherwise. An absent `size` is treated as large.
         Signed URLs are valid for one hour.
       x-scope: upload:write
-      x-rate-limit: 120/min
+      x-rate-limit: 30/min
       requestBody:
         required: true
         content:
@@ -94,7 +96,7 @@ paths:
       summary: Sign multipart parts
       description: At most 200 part numbers per request. Ask a block at a time.
       x-scope: upload:write
-      x-rate-limit: 600/min
+      x-rate-limit: 60/min
       requestBody:
         required: true
         content:
@@ -140,7 +142,7 @@ paths:
       summary: Finish a multipart upload
       description: Parts may be sent in any order; quotes around an ETag are stripped.
       x-scope: upload:write
-      x-rate-limit: 120/min
+      x-rate-limit: 30/min
       requestBody:
         required: true
         content:
@@ -189,7 +191,7 @@ paths:
         (`status`, `isApproved`, `isTest`…) are ignored; a release arrives
         `pending` and its environment comes from the key.
       x-scope: release:write
-      x-rate-limit: 120/min
+      x-rate-limit: 60/min
       requestBody:
         required: true
         content:
@@ -220,7 +222,7 @@ paths:
       summary: List releases
       description: Most recently updated first. Only the key's environment.
       x-scope: release:read
-      x-rate-limit: 300/min
+      x-rate-limit: 60/min
       parameters:
         - name: updatedSince
           in: query
@@ -269,7 +271,7 @@ paths:
       tags: [Releases]
       summary: Read one release
       x-scope: release:read
-      x-rate-limit: 600/min
+      x-rate-limit: 120/min
       responses:
         "200":
           description: The release.
@@ -291,7 +293,7 @@ paths:
         stores. A `rejected` or `taken_down` release cannot be edited (409). An
         ISRC, once present, cannot be changed (409).
       x-scope: release:write
-      x-rate-limit: 120/min
+      x-rate-limit: 60/min
       requestBody:
         required: true
         content:
@@ -320,7 +322,7 @@ paths:
       summary: Move a test release to a status
       description: Test keys only; a live key gets 403. Fires the real webhook.
       x-scope: release:write
-      x-rate-limit: 60/min
+      x-rate-limit: 30/min
       parameters:
         - $ref: "#/components/parameters/ReleaseId"
       requestBody:
@@ -356,7 +358,7 @@ paths:
         approved`). A name you already hold returns 409 naming its state; case,
         spaces and punctuation are ignored in that comparison.
       x-scope: channel:write
-      x-rate-limit: 30/min
+      x-rate-limit: 10/min
       requestBody:
         required: true
         content:
@@ -399,7 +401,7 @@ paths:
       summary: List channels
       description: Most recently updated first, 200 at a time.
       x-scope: channel:read
-      x-rate-limit: 120/min
+      x-rate-limit: 30/min
       responses:
         "200":
           description: Your channels.
@@ -426,7 +428,7 @@ paths:
       summary: Read the webhook
       description: The URL, and whether a secret exists. The secret itself is never returned.
       x-scope: webhook:manage
-      x-rate-limit: 60/min
+      x-rate-limit: 20/min
       responses:
         "200":
           description: What is configured.
@@ -453,7 +455,7 @@ paths:
         `rotateSecret: true` to mint a new one. Send an empty `url` to remove the
         webhook.
       x-scope: webhook:manage
-      x-rate-limit: 20/min
+      x-rate-limit: 5/min
       requestBody:
         required: true
         content:
@@ -494,7 +496,7 @@ paths:
       summary: Send a test event
       description: One signed `webhook.test` event, now, and what your server did with it.
       x-scope: webhook:manage
-      x-rate-limit: 10/min
+      x-rate-limit: 3/min
       responses:
         "200":
           description: The outcome, whether or not it was delivered.

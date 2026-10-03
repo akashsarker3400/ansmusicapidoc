@@ -501,6 +501,8 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   <span class="k">"label"</span>:             <span class="s">"Sundarban Records"</span>,
   <span class="k">"genre"</span>:             [<span class="s">"Pop"</span>],
   <span class="k">"releaseDate"</span>:       <span class="s">"2026-10-01T12:00:00.000Z"</span>,
+  <span class="k">"releaseTimezone"</span>:   <span class="n">null</span>,
+  <span class="k">"version"</span>:           <span class="s">"official"</span>,
   <span class="k">"channel"</span>:           <span class="s">"NadiaRainVEVO"</span>,
   <span class="k">"youtubeVideoId"</span>:    <span class="n">null</span>,
   <span class="k">"videoUrl"</span>:          <span class="n">null</span>,
@@ -537,14 +539,16 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
           <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td></td></tr>
           <tr><td><code>label</code></td><td class="type">string | null</td><td></td></tr>
           <tr><td><code>genre</code></td><td class="type">string[]</td><td>As we hold it — which may be mapped from what you sent; see <a href="#we-may-edit">we may edit what you send</a>.</td></tr>
-          <tr><td><code>releaseDate</code></td><td class="type">ISO 8601 | null</td><td>Null means as soon as it is approved.</td></tr>
+          <tr><td><code>releaseDate</code></td><td class="type">ISO 8601 | null</td><td>Null means as soon as it is approved. Returned as you sent it.</td></tr>
+          <tr><td><code>releaseTimezone</code></td><td class="type">string | null</td><td>The IANA zone a <code>releaseDate</code> without an offset is read in. Null means Asia/Dhaka. See <a href="#timezone">release date and timezone</a>.</td></tr>
+          <tr><td><code>version</code></td><td class="type">enum | null</td><td>What follows the title on YouTube — <code>official</code>, <code>lyric</code>, <code>audio</code> … See <a href="#version">version</a>.</td></tr>
           <tr><td><code>channel</code></td><td class="type">string | null</td><td>The VEVO channel name it goes to.</td></tr>
-          <tr><td><code>youtubeVideoId</code></td><td class="type">string | null</td><td>The eleven-character YouTube id, once the video is live. Null before that.</td></tr>
+          <tr><td><code>youtubeVideoId</code></td><td class="type">string | null</td><td>The eleven-character YouTube id, set when VEVO publishes the video — after <code>delivered</code>, announced by <code>release.youtube_linked</code>. Null before that.</td></tr>
           <tr><td><code>videoUrl</code></td><td class="type">url | null</td><td>A watch link built from <code>youtubeVideoId</code>. Present once it is watchable — <strong>not</strong> the file you sent.</td></tr>
           <tr><td><code>language</code> … <code>copyrightYear</code></td><td class="type">string | null</td><td>The descriptive fields, returned as we hold them.</td></tr>
           <tr><td><code>keywords</code></td><td class="type">string[]</td><td></td></tr>
           <tr><td><code>explicit</code></td><td class="type">boolean | null</td><td>Null when nobody has said.</td></tr>
-          <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td>Where it is listed once live.</td></tr>
+          <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td>Where it is listed once live. See <a href="#visibility">visibility</a>.</td></tr>
           <tr><td><code>imageUrl</code></td><td class="type">url | null</td><td>The cover art as stored.</td></tr>
           <tr><td><code>environment</code></td><td class="type">"live" | "test"</td><td>Which world this landed in. A test release is real but reaches no reviewer or store.</td></tr>
           <tr><td><code>createdAt</code>, <code>updatedAt</code></td><td class="type">ISO 8601</td><td><code>updatedAt</code> is what <code>updatedSince</code> compares against.</td></tr>
@@ -576,6 +580,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
     "description":      "Official music video.",
     "releaseDate":      "2026-10-01T12:00:00Z",
     "channel":          "NadiaRainVEVO",
+    "version":          "official",
     "visibility":       "public",
     "explicit":         false,
     "videoUrl":         "https://cdn.ansmusic.io/uploads/videos/yourco-master-a1b2c3.mp4",
@@ -595,6 +600,7 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
     description: <span class="s">'Official music video.'</span>,
     releaseDate: <span class="s">'2026-10-01T12:00:00Z'</span>,
     channel: <span class="s">'NadiaRainVEVO'</span>,
+    version: <span class="s">'official'</span>,
     explicit: <span class="n">false</span>,
     videoUrl: fileUrl,           <span class="c">// from the upload, or a URL you host</span>
     imageUrl: coverUrl,
@@ -617,6 +623,7 @@ console.log(statusCode, message, data.id, data.videoId, data.status);</code></pr
         <span class="s">"description"</span>: <span class="s">"Official music video."</span>,
         <span class="s">"releaseDate"</span>: <span class="s">"2026-10-01T12:00:00Z"</span>,
         <span class="s">"channel"</span>: <span class="s">"NadiaRainVEVO"</span>,
+        <span class="s">"version"</span>: <span class="s">"official"</span>,
         <span class="s">"explicit"</span>: <span class="n">False</span>,
         <span class="s">"videoUrl"</span>: file_url,
         <span class="s">"imageUrl"</span>: cover_url,
@@ -640,6 +647,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
     <span class="s">'language'</span>      =&gt; <span class="s">'Bengali'</span>,
     <span class="s">'description'</span>   =&gt; <span class="s">'Official music video.'</span>,
     <span class="s">'channel'</span>       =&gt; <span class="s">'NadiaRainVEVO'</span>,
+    <span class="s">'version'</span>       =&gt; <span class="s">'official'</span>,
     <span class="s">'releaseDate'</span>   =&gt; <span class="s">'2026-10-01T12:00:00Z'</span>,
     <span class="s">'videoUrl'</span>      =&gt; <span class="k">$fileUrl</span>,
     <span class="s">'imageUrl'</span>      =&gt; <span class="k">$coverUrl</span>,
@@ -666,9 +674,11 @@ curl_setopt_array(<span class="k">$ch</span>, [
               <tr><td><code>channel</code></td><td class="type">string</td><td><span class="req">required</span></td><td>The VEVO channel name it goes to. Request one first if you do not have it — see <a href="#channels">Channels</a>.</td></tr>
               <tr><td><code>externalId</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Your own id. Unique per account. See <a href="#idempotency">idempotency</a>. Strongly recommended.</td></tr>
               <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
-              <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>Must carry a timezone — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
+              <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>With an offset, or with <code>releaseTimezone</code> — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
+              <tr><td><code>releaseTimezone</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>An IANA zone, such as <code>Asia/Dhaka</code> or <code>Europe/London</code>, for a <code>releaseDate</code> sent without an offset. Anything else is a <code>400</code>.</td></tr>
+              <tr><td><code>version</code></td><td class="type">enum</td><td><span class="opt">optional</span></td><td>What follows the title on YouTube. One of the eight in <a href="#version">version</a>; anything else is a <code>400</code>.</td></tr>
               <tr><td><code>isrc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Yours if you have one; dashes and spaces are stripped, case is upper-cased. Left out, we issue one at approval and tell you.</td></tr>
-              <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td><span class="opt">optional</span></td><td>Where the video is listed once live. Default <code>public</code> — listed on both YouTube and VEVO.</td></tr>
+              <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td><span class="opt">optional</span></td><td>Where the video is listed once live. Default <code>public</code>. See <a href="#visibility">visibility</a>.</td></tr>
               <tr><td><code>explicit</code></td><td class="type">boolean</td><td><span class="opt">optional</span></td><td>Whether the content is explicit.</td></tr>
               <tr><td><code>keywords</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
               <tr><td><code>composer</code>, <code>producer</code>, <code>editor</code>, <code>musicDirector</code>, <code>copyrightYear</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Credits, as free text.</td></tr>
@@ -686,8 +696,34 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <p><code>externalId</code> is your own id, and sending it buys you two things. A repeated call returns the release you already made — same <code>id</code>, <code>200</code> and the message <em>Already created</em> rather than <code>201</code> — instead of creating a second one. And you can address the release by your id everywhere (<code>GET</code>, <code>PATCH</code>, <code>simulate</code>, <code>?externalId=</code>) rather than storing ours.</p>
       <p class="muted">Without it, a retried request after a timeout creates a second release. With it, retrying is safe — including after a <code>500</code>.</p>
 
-      <h4 id="timezone">releaseDate must carry a timezone</h4>
-      <p><code>2026-10-01T12:00:00Z</code> or <code>2026-10-01T18:00:00+06:00</code>. A date with no zone is read as UTC, and a release meant for six in the evening in Dhaka then goes live at midnight the following day.</p>
+      <h4 id="timezone">Release date and timezone</h4>
+      <p>Give <code>releaseDate</code> a timezone, one of two ways — the offset in the date, or the wall clock with <code>releaseTimezone</code>:</p>
+<pre><code>{ <span class="k">"releaseDate"</span>: <span class="s">"2026-10-01T18:00:00+06:00"</span> }
+{ <span class="k">"releaseDate"</span>: <span class="s">"2026-10-01T18:00"</span>, <span class="k">"releaseTimezone"</span>: <span class="s">"Europe/London"</span> }</code></pre>
+      <p>An offset in the date always wins over <code>releaseTimezone</code>. A date with neither is read in <strong>Dhaka time (Asia/Dhaka)</strong>, and the response says so in a <code>warnings</code> list beside the release, so a schedule meant for another clock is caught on the call that set it:</p>
+<pre><code>{ <span class="k">"id"</span>: <span class="s">"…"</span>, <span class="k">"status"</span>: <span class="s">"pending"</span>, …,
+  <span class="k">"warnings"</span>: [<span class="s">"releaseDate \"2026-10-01T18:00\" has no timezone, so it is read as Asia/Dhaka time. Send an offset (\"2026-08-25T18:00:00+06:00\") or a releaseTimezone."</span>] }</code></pre>
+      <p class="muted small"><code>warnings</code> appears only when there is something to say, and only on the response to the call — never on reads or webhooks.</p>
+
+      <h4 id="version">Version</h4>
+      <p><code>version</code> decides what follows the title on YouTube. We add it at delivery, in the words VEVO's delivery guidelines use, so send the bare title:</p>
+      <div class="tw"><table>
+        <thead><tr><th><code>version</code></th><th><code>"Akashe Batase"</code> goes out as</th></tr></thead>
+        <tbody>
+          <tr><td><code>official</code></td><td>Akashe Batase (Official Video)</td></tr>
+          <tr><td><code>lyric</code></td><td>Akashe Batase (Official Lyric Video)</td></tr>
+          <tr><td><code>audio</code></td><td>Akashe Batase (Audio) — audio over a still image</td></tr>
+          <tr><td><code>live</code></td><td>Akashe Batase (Live)</td></tr>
+          <tr><td><code>interview</code></td><td>Akashe Batase (Interview)</td></tr>
+          <tr><td><code>behind_the_scenes</code></td><td>Akashe Batase (Behind The Scenes)</td></tr>
+          <tr><td><code>teaser</code></td><td>Akashe Batase (Teaser)</td></tr>
+          <tr><td><code>original</code></td><td>Akashe Batase — nothing added</td></tr>
+        </tbody>
+      </table></div>
+      <p>A title that already says it — <code>Akashe Batase (Lyric Video)</code> — is not given a second one. Left out, nothing is added.</p>
+
+      <h4 id="visibility">Visibility</h4>
+      <p><code>unlisted</code> publishes the video on YouTube but keeps it out of search and off the channel page: only people with the link find it. <code>public</code>, the default, lists it everywhere.</p>
 
       <!-- GET /releases -->
       <h3 id="list-releases">List releases <a class="anchor" href="#list-releases">#</a></h3>
@@ -756,7 +792,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
         <div class="st wait"><b>pending</b><span>With us for review. Where every release starts, and where it returns after any edit.</span></div>
         <div class="st warn"><b>needs_fix</b><span>Sent back. <code>reason</code> says what. Answer with <code>PATCH</code> and it returns to review.</span></div>
         <div class="st ok"><b>approved</b><span>Accepted, on its way to the stores. The ISRC is issued at this moment if you did not send one.</span></div>
-        <div class="st ok"><b>delivered</b><span>Live. <code>youtubeVideoId</code> and <code>videoUrl</code> are set.</span></div>
+        <div class="st ok"><b>delivered</b><span>Delivered to VEVO. <code>youtubeVideoId</code> and <code>videoUrl</code> follow when VEVO publishes it, with <code>release.youtube_linked</code>.</span></div>
         <div class="st bad"><b>rejected</b><span><code>reason</code> says why. Final: cannot be edited or resubmitted.</span></div>
         <div class="st bad"><b>taken_down</b><span>Removed from the stores.</span></div>
       </div>
@@ -888,7 +924,8 @@ curl_setopt_array(<span class="k">$ch</span>, [
           <tr><td><code>release.needs_fix</code></td><td>A reviewer sends it back. <code>data.reason</code> says what to change.</td><td>release</td></tr>
           <tr><td><code>release.approved</code></td><td>A reviewer accepts it. Sent again if it is edited and re-approved.</td><td>release</td></tr>
           <tr><td><code>release.isrc_assigned</code></td><td>We issue an ISRC, at approval. Not sent when you supplied your own.</td><td>release</td></tr>
-          <tr><td><code>release.delivered</code></td><td>It is live. <code>data.youtubeVideoId</code> and <code>data.videoUrl</code> are set.</td><td>release</td></tr>
+          <tr><td><code>release.delivered</code></td><td>The video has been delivered to VEVO. <code>data.youtubeVideoId</code> is usually still null — see the next row.</td><td>release</td></tr>
+          <tr><td><code>release.youtube_linked</code></td><td>VEVO published it on YouTube. <code>data.youtubeVideoId</code> and <code>data.videoUrl</code> are set. Always after <code>release.delivered</code>.</td><td>release</td></tr>
           <tr><td><code>release.rejected</code></td><td>A reviewer refuses it. <code>data.reason</code> says why. Final.</td><td>release</td></tr>
           <tr><td><code>release.taken_down</code></td><td>It is removed from the stores.</td><td>release</td></tr>
           <tr><td><code>release.updated</code></td><td>A descriptive field changed — a reviewer's edit, or your own <code>PATCH</code> — without a change of status, or an approved release returned to review for an edit.</td><td>release</td></tr>
@@ -1053,8 +1090,9 @@ handle(<span class="k">$evt</span>);</code></pre>
 <span class="c">→ 200 "Moved to needs_fix"</span>
 { <span class="k">"status"</span>: <span class="s">"needs_fix"</span>, <span class="k">"reason"</span>: <span class="s">"Cover art is below 1400px."</span>, … }</code></pre>
           <p><code>status</code> is one of
-            <span class="pill">pending</span> <span class="pill warn">needs_fix</span> <span class="pill ok">approved</span> <span class="pill ok">delivered</span> <span class="pill bad">rejected</span> <span class="pill bad">taken_down</span>.
+            <span class="pill">pending</span> <span class="pill warn">needs_fix</span> <span class="pill ok">approved</span> <span class="pill ok">delivered</span> <span class="pill ok">youtube_linked</span> <span class="pill bad">rejected</span> <span class="pill bad">taken_down</span>.
             <code>reason</code> is optional and used on <code>needs_fix</code> and <code>rejected</code>; left out, it reads <em>Simulated from the sandbox</em>. <code>:id</code> is our id, your externalId or the videoId.</p>
+          <p><code>youtube_linked</code> delivers the release if it is not delivered yet and sets the placeholder YouTube id <code>TESTVIDEO01</code>, which opens nothing; you receive <code>release.delivered</code> (if it was not already) and then <code>release.youtube_linked</code>. Move it back to <code>pending</code> to run it again.</p>
           <p>Each move fires the same webhook a real change does, signed the same way. Moving to <code>approved</code> does not issue an ISRC — that happens when a real reviewer approves; send your own if you want to see one on a test release.</p>
           <p class="muted small">A live key gets <code>403</code>. Live releases move when a reviewer moves them.</p>
         </div>
@@ -1145,6 +1183,15 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">13</span>Changelog</h2>
       <p class="lead">Fields are added, never removed or renamed. Anything that would break a working integration would be a new version on a new path.</p>
       <div class="log">
+        <div class="entry"><time>3 October 2026</time>
+          <ul>
+            <li><strong>New:</strong> <code>version</code> on create and update — <code>official</code>, <code>lyric</code>, <code>audio</code>, <code>live</code>, <code>interview</code>, <code>behind_the_scenes</code>, <code>teaser</code>, <code>original</code> — and returned on reads. It decides what follows the title on YouTube. See <a href="#version">version</a>.</li>
+            <li><strong>New:</strong> <code>releaseTimezone</code> on create and update, for a <code>releaseDate</code> sent as a wall clock. Returned on reads.</li>
+            <li><strong>Changed:</strong> a <code>releaseDate</code> with no offset and no <code>releaseTimezone</code> is read in Dhaka time, not UTC, and the response carries a <code>warnings</code> entry saying so.</li>
+            <li><strong>New:</strong> <code>release.youtube_linked</code>, sent when VEVO publishes the video and its YouTube id is known. <code>release.delivered</code> means the video reached VEVO; the YouTube id follows once VEVO publishes it. <code>simulate</code> takes <code>youtube_linked</code>.</li>
+            <li><strong>Fixed:</strong> <code>visibility: "unlisted"</code> now reaches YouTube. It was stored and returned, but the video was published as public.</li>
+          </ul>
+        </div>
         <div class="entry"><time>16 September 2026</time>
           <ul>
             <li><strong>Changed:</strong> <code>POST /releases</code> requires nine fields — <code>imageUrl</code>, <code>label</code>, <code>genre</code>, <code>language</code>, <code>description</code> and <code>channel</code> join the original three. A release without them cannot be delivered and was only ever sent back. A request missing several is refused once, naming all of them.</li>

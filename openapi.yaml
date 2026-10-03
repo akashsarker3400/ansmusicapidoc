@@ -202,7 +202,7 @@ paths:
           description: Created and queued for review.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+              schema: { $ref: "#/components/schemas/ReleaseWriteResponse" }
         "200":
           description: Already created — the same `externalId` was sent before.
           content:
@@ -304,7 +304,7 @@ paths:
           description: Updated; `data.status` is `pending`.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ReleaseResponse" }
+              schema: { $ref: "#/components/schemas/ReleaseWriteResponse" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -333,7 +333,10 @@ paths:
               type: object
               required: [status]
               properties:
-                status: { $ref: "#/components/schemas/Status" }
+                status:
+                  type: string
+                  enum: [pending, needs_fix, approved, delivered, youtube_linked, rejected, taken_down]
+                  description: youtube_linked delivers the release if needed and sets the placeholder YouTube id TESTVIDEO01.
                 reason:
                   type: string
                   description: Used on needs_fix and rejected. Defaults to "Simulated from the sandbox."
@@ -530,8 +533,8 @@ webhooks:
       summary: A release changed
       description: |
         Sent for `release.created`, `release.needs_fix`, `release.approved`,
-        `release.isrc_assigned`, `release.delivered`, `release.rejected`,
-        `release.taken_down` and `release.updated`. Signed: `x-ans-signature:
+        `release.isrc_assigned`, `release.delivered`, `release.youtube_linked`,
+        `release.rejected`, `release.taken_down` and `release.updated`. Signed: `x-ans-signature:
         v1=<hex HMAC-SHA256(secret, "<x-ans-timestamp>.<raw body>")>`. Retried
         four times over about a minute with the same `id`. Reply 2xx quickly.
       requestBody:
@@ -678,13 +681,15 @@ components:
         title: { type: string }
         primaryArtist: { $ref: "#/components/schemas/StringList" }
         featuringArtists: { $ref: "#/components/schemas/StringList" }
-        videoUrl: { type: string, format: uri, description: The upload's fileUrl, or a public URL you host. `video` is an alias. }
+        videoUrl: { type: string, format: uri, description: "The upload's fileUrl, or a public URL you host. `video` is an alias." }
         imageUrl: { type: string, format: uri, description: Cover art. `image` and `thumbnail` are aliases. }
         label: { type: string }
         genre: { $ref: "#/components/schemas/StringList" }
         language: { type: string }
-        releaseDate: { type: string, format: date-time, description: Must carry a timezone. Absent means as soon as approved. }
-        isrc: { type: string, description: Yours, if you have one. Dashes and spaces are stripped. }
+        releaseDate: { type: string, description: "ISO 8601. With an offset, or a wall clock read in releaseTimezone; with neither it is read as Asia/Dhaka and the response carries a warning. Absent means as soon as approved." }
+        releaseTimezone: { type: string, description: "IANA zone, e.g. Asia/Dhaka or Europe/London, for a releaseDate without an offset. Anything else is a 400.", example: Asia/Dhaka }
+        version: { $ref: "#/components/schemas/Version" }
+        isrc: { type: string, description: "Yours, if you have one. Dashes and spaces are stripped." }
         channel: { type: string, description: VEVO channel name. }
         visibility: { type: string, enum: [public, unlisted], default: public }
         explicit: { type: boolean }
@@ -709,7 +714,9 @@ components:
         label: { type: string }
         genre: { $ref: "#/components/schemas/StringList" }
         language: { type: string }
-        releaseDate: { type: string, format: date-time }
+        releaseDate: { type: string }
+        releaseTimezone: { type: string }
+        version: { $ref: "#/components/schemas/Version" }
         isrc: { type: string, description: Only while the release has none. }
         channel: { type: string }
         visibility: { type: string, enum: [public, unlisted] }
@@ -739,9 +746,14 @@ components:
         featuringArtists: { type: array, items: { type: string } }
         label: { type: [string, "null"] }
         genre: { type: array, items: { type: string } }
-        releaseDate: { type: [string, "null"], format: date-time }
+        releaseDate: { type: [string, "null"] }
+        releaseTimezone: { type: [string, "null"], description: Null means Asia/Dhaka. }
+        version:
+          oneOf:
+            - $ref: "#/components/schemas/Version"
+            - type: "null"
         channel: { type: [string, "null"] }
-        youtubeVideoId: { type: [string, "null"] }
+        youtubeVideoId: { type: [string, "null"], description: "Set when VEVO publishes the video, announced by release.youtube_linked." }
         videoUrl: { type: [string, "null"], format: uri, description: A YouTube watch link once live. Not the file you sent. }
         language: { type: [string, "null"] }
         description: { type: [string, "null"] }
@@ -757,6 +769,32 @@ components:
         environment: { type: string, enum: [live, test] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    Version:
+      type: string
+      enum: [official, lyric, audio, live, interview, behind_the_scenes, teaser, original]
+      description: |
+        What follows the title on YouTube: official → "(Official Video)",
+        lyric → "(Official Lyric Video)", audio → "(Audio)", live → "(Live)",
+        interview → "(Interview)", behind_the_scenes → "(Behind The Scenes)",
+        teaser → "(Teaser)", original → nothing. Not added twice when the title
+        already says it.
+
+    ReleaseWriteResponse:
+      description: A create or update. `data.warnings` appears only when there is something to say.
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: "#/components/schemas/Release"
+                - type: object
+                  properties:
+                    warnings:
+                      type: array
+                      items: { type: string }
+                      example: ["releaseDate \"2026-10-01T18:00\" has no timezone, so it is read as Asia/Dhaka time. Send an offset (\"2026-08-25T18:00:00+06:00\") or a releaseTimezone."]
 
     ReleaseResponse:
       allOf:
@@ -779,7 +817,7 @@ components:
     WebhookEvent:
       type: object
       properties:
-        id: { type: string, description: One per event, the same on every retry., example: evt_9d2c4b1e7f0a4c8e9b3d6a1f2e5c7b90 }
+        id: { type: string, description: "One per event, the same on every retry.", example: evt_9d2c4b1e7f0a4c8e9b3d6a1f2e5c7b90 }
         event:
           type: string
           enum:
@@ -788,6 +826,7 @@ components:
             - release.approved
             - release.isrc_assigned
             - release.delivered
+            - release.youtube_linked
             - release.rejected
             - release.taken_down
             - release.updated

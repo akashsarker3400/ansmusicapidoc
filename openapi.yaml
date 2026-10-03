@@ -687,7 +687,7 @@ components:
         genre: { $ref: "#/components/schemas/StringList" }
         language: { type: string }
         releaseDate: { type: string, description: "ISO 8601. With an offset, or a wall clock read in releaseTimezone; with neither it is read as Asia/Dhaka and the response carries a warning. Absent means as soon as approved." }
-        releaseTimezone: { type: string, description: "IANA zone, e.g. Asia/Dhaka or Europe/London, for a releaseDate without an offset. Anything else is a 400.", example: Asia/Dhaka }
+        releaseTimezone: { type: string, description: "IANA zone, e.g. Asia/Dhaka or Europe/London, for a releaseDate without an offset. Anything else is ignored and named in data.warnings.", example: Asia/Dhaka }
         version: { $ref: "#/components/schemas/Version" }
         isrc: { type: string, description: "Yours, if you have one. Dashes and spaces are stripped." }
         channel: { type: string, description: VEVO channel name. }
@@ -778,7 +778,9 @@ components:
         lyric → "(Official Lyric Video)", audio → "(Audio)", live → "(Live)",
         interview → "(Interview)", behind_the_scenes → "(Behind The Scenes)",
         teaser → "(Teaser)", original → nothing. Not added twice when the title
-        already says it.
+        already says it. Common phrasings ("Official Video", "Lyric Video",
+        "Official Audio", "BTS") are understood; any other value is ignored and
+        named in data.warnings, never refused.
 
     ReleaseWriteResponse:
       description: A create or update. `data.warnings` appears only when there is something to say.

@@ -675,8 +675,8 @@ curl_setopt_array(<span class="k">$ch</span>, [
               <tr><td><code>externalId</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Your own id. Unique per account. See <a href="#idempotency">idempotency</a>. Strongly recommended.</td></tr>
               <tr><td><code>featuringArtists</code></td><td class="type">string[]</td><td><span class="opt">optional</span></td><td>Comma-separated string also accepted.</td></tr>
               <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>With an offset, or with <code>releaseTimezone</code> — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
-              <tr><td><code>releaseTimezone</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>An IANA zone, such as <code>Asia/Dhaka</code> or <code>Europe/London</code>, for a <code>releaseDate</code> sent without an offset. Anything else is a <code>400</code>.</td></tr>
-              <tr><td><code>version</code></td><td class="type">enum</td><td><span class="opt">optional</span></td><td>What follows the title on YouTube. One of the eight in <a href="#version">version</a>; anything else is a <code>400</code>.</td></tr>
+              <tr><td><code>releaseTimezone</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>An IANA zone, such as <code>Asia/Dhaka</code> or <code>Europe/London</code>, for a <code>releaseDate</code> sent without an offset. A value that is not a zone is ignored, with a warning.</td></tr>
+              <tr><td><code>version</code></td><td class="type">enum</td><td><span class="opt">optional</span></td><td>What follows the title on YouTube. One of the eight in <a href="#version">version</a>. Anything else is ignored, with a warning — never refused.</td></tr>
               <tr><td><code>isrc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Yours if you have one; dashes and spaces are stripped, case is upper-cased. Left out, we issue one at approval and tell you.</td></tr>
               <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td><span class="opt">optional</span></td><td>Where the video is listed once live. Default <code>public</code>. See <a href="#visibility">visibility</a>.</td></tr>
               <tr><td><code>explicit</code></td><td class="type">boolean</td><td><span class="opt">optional</span></td><td>Whether the content is explicit.</td></tr>
@@ -703,7 +703,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
       <p>An offset in the date always wins over <code>releaseTimezone</code>. A date with neither is read in <strong>Dhaka time (Asia/Dhaka)</strong>, and the response says so in a <code>warnings</code> list beside the release, so a schedule meant for another clock is caught on the call that set it:</p>
 <pre><code>{ <span class="k">"id"</span>: <span class="s">"…"</span>, <span class="k">"status"</span>: <span class="s">"pending"</span>, …,
   <span class="k">"warnings"</span>: [<span class="s">"releaseDate \"2026-10-01T18:00\" has no timezone, so it is read as Asia/Dhaka time. Send an offset (\"2026-08-25T18:00:00+06:00\") or a releaseTimezone."</span>] }</code></pre>
-      <p class="muted small"><code>warnings</code> appears only when there is something to say, and only on the response to the call — never on reads or webhooks.</p>
+      <p class="muted small"><code>warnings</code> appears only when there is something to say — a date read in Dhaka time, a <code>version</code> or <code>releaseTimezone</code> we did not recognise — and only on the response to the call, never on reads or webhooks. Nothing that carries a warning is refused.</p>
 
       <h4 id="version">Version</h4>
       <p><code>version</code> decides what follows the title on YouTube. We add it at delivery, in the words VEVO's delivery guidelines use, so send the bare title:</p>
@@ -721,6 +721,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
         </tbody>
       </table></div>
       <p>A title that already says it — <code>Akashe Batase (Lyric Video)</code> — is not given a second one. Left out, nothing is added.</p>
+      <p>Common phrasings are understood too — <code>Official Video</code>, <code>Lyric Video</code>, <code>lyrics</code>, <code>Official Audio</code>, <code>BTS</code>, <code>trailer</code>. Anything else is <strong>not refused</strong>: the release is accepted, nothing is added to the title, and the response carries a <code>warnings</code> entry naming the value it did not recognise. A value you sent before this field existed keeps working exactly as it did.</p>
 
       <h4 id="visibility">Visibility</h4>
       <p><code>unlisted</code> publishes the video on YouTube but keeps it out of search and off the channel page: only people with the link find it. <code>public</code>, the default, lists it everywhere.</p>
@@ -1187,6 +1188,7 @@ handle(<span class="k">$evt</span>);</code></pre>
           <ul>
             <li><strong>New:</strong> <code>version</code> on create and update — <code>official</code>, <code>lyric</code>, <code>audio</code>, <code>live</code>, <code>interview</code>, <code>behind_the_scenes</code>, <code>teaser</code>, <code>original</code> — and returned on reads. It decides what follows the title on YouTube. See <a href="#version">version</a>.</li>
             <li><strong>New:</strong> <code>releaseTimezone</code> on create and update, for a <code>releaseDate</code> sent as a wall clock. Returned on reads.</li>
+            <li>Neither new field can refuse a request: a value we do not recognise is ignored and named in a <code>warnings</code> list on the response. An integration that worked yesterday works today.</li>
             <li><strong>Changed:</strong> a <code>releaseDate</code> with no offset and no <code>releaseTimezone</code> is read in Dhaka time, not UTC, and the response carries a <code>warnings</code> entry saying so.</li>
             <li><strong>New:</strong> <code>release.youtube_linked</code>, sent when VEVO publishes the video and its YouTube id is known. <code>release.delivered</code> means the video reached VEVO; the YouTube id follows once VEVO publishes it. <code>simulate</code> takes <code>youtube_linked</code>.</li>
             <li><strong>Fixed:</strong> <code>visibility: "unlisted"</code> now reaches YouTube. It was stored and returned, but the video was published as public.</li>

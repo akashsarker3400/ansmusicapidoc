@@ -493,6 +493,8 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
   <span class="k">"title"</span>:             <span class="s">"Akashe Batase"</span>,
   <span class="k">"isrc"</span>:              <span class="s">"QT6X62690001"</span>,
   <span class="k">"isrcAssignedByAns"</span>: <span class="n">true</span>,
+  <span class="k">"upc"</span>:               <span class="s">"8909483468005"</span>,
+  <span class="k">"upcAssignedByAns"</span>:  <span class="n">true</span>,
   <span class="k">"status"</span>:            <span class="s">"approved"</span>,
   <span class="k">"statusDetail"</span>:      <span class="s">"Accepted and on its way to the stores."</span>,
   <span class="k">"reason"</span>:            <span class="n">null</span>,
@@ -532,6 +534,8 @@ curl -X PATCH https://server.ansmusic.io/partner/releases/REL-2026-0412 \
           <tr><td><code>title</code></td><td class="type">string</td><td></td></tr>
           <tr><td><code>isrc</code></td><td class="type">string | null</td><td>Twelve characters, no dashes. Null until we issue one at approval or you supply one.</td></tr>
           <tr><td><code>isrcAssignedByAns</code></td><td class="type">boolean</td><td>True when we issued the code. If you sent one we keep it and never replace it, so this stays false and no <code>release.isrc_assigned</code> is sent — there is nothing to tell you that you did not already know.</td></tr>
+          <tr><td><code>upc</code></td><td class="type">string | null</td><td>The video's own barcode, 12 or 13 digits. Yours if you sent one; otherwise we assign one at approval. Null until then.</td></tr>
+          <tr><td><code>upcAssignedByAns</code></td><td class="type">boolean</td><td>True when the barcode came from us.</td></tr>
           <tr><td><code>status</code></td><td class="type">enum</td><td>One of the six in <a href="#lifecycle">Status lifecycle</a>.</td></tr>
           <tr><td><code>statusDetail</code></td><td class="type">string</td><td>The same thing in a sentence, so your dashboard needs no lookup table.</td></tr>
           <tr><td><code>reason</code></td><td class="type">string | null</td><td>Set on <code>needs_fix</code> (what to change) and <code>rejected</code> (why). Null otherwise. Cleared when the release returns to review.</td></tr>
@@ -677,6 +681,7 @@ curl_setopt_array(<span class="k">$ch</span>, [
               <tr><td><code>releaseDate</code></td><td class="type">ISO 8601</td><td><span class="opt">optional</span></td><td>With an offset, or with <code>releaseTimezone</code> — <a href="#timezone">see below</a>. Absent means as soon as it is approved.</td></tr>
               <tr><td><code>releaseTimezone</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>An IANA zone, such as <code>Asia/Dhaka</code> or <code>Europe/London</code>, for a <code>releaseDate</code> sent without an offset. A value that is not a zone is ignored, with a warning.</td></tr>
               <tr><td><code>version</code></td><td class="type">enum</td><td><span class="opt">optional</span></td><td>What follows the title on YouTube. One of the eight in <a href="#version">version</a>. Anything else is ignored, with a warning — never refused.</td></tr>
+              <tr><td><code>upc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>The video's barcode, if you already have one — 12 or 13 digits. Left out, we assign one at approval. One that is not a valid barcode, or is already on another release, is ignored with a warning. See <a href="#upc">UPC</a>.</td></tr>
               <tr><td><code>isrc</code></td><td class="type">string</td><td><span class="opt">optional</span></td><td>Yours if you have one; dashes and spaces are stripped, case is upper-cased. Left out, we issue one at approval and tell you.</td></tr>
               <tr><td><code>visibility</code></td><td class="type">"public" | "unlisted"</td><td><span class="opt">optional</span></td><td>Where the video is listed once live. Default <code>public</code>. See <a href="#visibility">visibility</a>.</td></tr>
               <tr><td><code>explicit</code></td><td class="type">boolean</td><td><span class="opt">optional</span></td><td>Whether the content is explicit.</td></tr>
@@ -801,6 +806,10 @@ curl_setopt_array(<span class="k">$ch</span>, [
 
       <h4 id="we-may-edit">We may edit what you send, and we will tell you</h4>
       <p>A description a store will not take, a genre that has to be mapped to the one that store actually has, a typo in a title — these are corrected here rather than sent back to you, because sending one back costs a release its date. Whenever a descriptive field changes you get <code>release.updated</code>, carrying the release as it now stands. Write it back into your catalogue: from that point ours is what the stores receive, and a difference between the two surfaces on a statement rather than as an error.</p>
+
+      <h4 id="upc">UPC</h4>
+      <p>Every video gets its own barcode, sent to VEVO as the release's ICPN. It is the video's, not the audio single's: a music video is a product of its own. Send yours in <code>upc</code> if you have one; leave it out and we assign one from our own range when the release is approved, the same moment its ISRC is issued, and <code>upcAssignedByAns</code> is true.</p>
+      <p>A <code>upc</code> is never a reason to refuse a release. One that fails the GS1 check digit, or is already on another release, is ignored and named in <code>warnings</code>, and ours is assigned instead. Once a release has a UPC it cannot be changed. Releases delivered before October 2026 went without one and keep it that way.</p>
 
       <h4 id="isrc-policy">ISRCs</h4>
       <p>Send your own if you have one; it is kept exactly and never replaced. Leave it out and we issue one from our own range when the release is approved — you get <code>release.isrc_assigned</code> with the code, and <code>isrcAssignedByAns</code> is true from then on. A code that is already in use anywhere in our catalogue is refused at creation.</p>
@@ -1184,6 +1193,12 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">13</span>Changelog</h2>
       <p class="lead">Fields are added, never removed or renamed. Anything that would break a working integration would be a new version on a new path.</p>
       <div class="log">
+        <div class="entry"><time>4 October 2026</time>
+          <ul>
+            <li><strong>New:</strong> <code>upc</code> on create and update, and <code>upc</code> / <code>upcAssignedByAns</code> on reads. Every video now gets its own UPC — yours if you send one, ours from approval otherwise — delivered to VEVO as the ICPN. See <a href="#upc">UPC</a>.</li>
+            <li>An invalid or already-used <code>upc</code> is ignored with a warning, never refused.</li>
+          </ul>
+        </div>
         <div class="entry"><time>3 October 2026</time>
           <ul>
             <li><strong>New:</strong> <code>version</code> on create and update — <code>official</code>, <code>lyric</code>, <code>audio</code>, <code>live</code>, <code>interview</code>, <code>behind_the_scenes</code>, <code>teaser</code>, <code>original</code> — and returned on reads. It decides what follows the title on YouTube. See <a href="#version">version</a>.</li>

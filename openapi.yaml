@@ -690,6 +690,7 @@ components:
         releaseTimezone: { type: string, description: "IANA zone, e.g. Asia/Dhaka or Europe/London, for a releaseDate without an offset. Anything else is ignored and named in data.warnings.", example: Asia/Dhaka }
         version: { $ref: "#/components/schemas/Version" }
         isrc: { type: string, description: "Yours, if you have one. Dashes and spaces are stripped." }
+        upc: { type: string, description: "The video's barcode, 12 or 13 digits, if you have one. Left out, one is assigned at approval. Invalid or already used: ignored and named in data.warnings." }
         channel: { type: string, description: VEVO channel name. }
         visibility: { type: string, enum: [public, unlisted], default: public }
         explicit: { type: boolean }
@@ -718,6 +719,7 @@ components:
         releaseTimezone: { type: string }
         version: { $ref: "#/components/schemas/Version" }
         isrc: { type: string, description: Only while the release has none. }
+        upc: { type: string, description: Only while the release has none. }
         channel: { type: string }
         visibility: { type: string, enum: [public, unlisted] }
         explicit: { type: boolean }
@@ -739,6 +741,8 @@ components:
         title: { type: string }
         isrc: { type: [string, "null"] }
         isrcAssignedByAns: { type: boolean }
+        upc: { type: [string, "null"], description: "The video's own barcode; assigned at approval when you did not send one." }
+        upcAssignedByAns: { type: boolean }
         status: { $ref: "#/components/schemas/Status" }
         statusDetail: { type: string }
         reason: { type: [string, "null"], description: Set on needs_fix and rejected. }

@@ -1,0 +1,33 @@
+# Dependencies and build output (there is no build step today; these are here
+# so they never get committed if one is added).
+node_modules
+dist
+
+# Environment files — never commit. The example is the only exception.
+.env
+.env.*
+!.env.example
+
+# Keys, certificates and signing material
+*.pem
+*.p8
+*.p12
+*.pfx
+*.key
+*.jks
+*.keystore
+
+# Cloud service-account / credential JSON
+*service-account*.json
+*serviceAccount*.json
+*service_account*.json
+*credentials*.json
+google-services.json
+GoogleService-Info.plist
+
+# OS and editor noise
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.log

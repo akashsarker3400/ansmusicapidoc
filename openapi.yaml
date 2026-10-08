@@ -584,7 +584,10 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
     Forbidden:
-      description: Key lacks the scope, is not permitted from this address, or is a live key on a test-only route.
+      description: >-
+        Key lacks the scope, is called from an address not on its IP allowlist
+        (`code: IP_NOT_ALLOWED`; the allowed addresses are never named), or is
+        a live key on a test-only route.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -617,6 +620,10 @@ components:
       type: object
       properties:
         success: { type: boolean, const: false }
+        code:
+          type: string
+          description: Present on some errors, for a program to branch on. `IP_NOT_ALLOWED` — the key is restricted to other addresses.
+          example: IP_NOT_ALLOWED
         message: { type: string }
         errorMessages:
           type: array

@@ -223,7 +223,21 @@ echo <span class="k">$me</span>[<span class="s">'company'</span>], <span class="
       <p class="muted small"><code>GET /partner/me</code> needs no scope — any valid key may ask who it is.</p>
 
       <h3 id="ip-allowlist">IP allowlist <a class="anchor" href="#ip-allowlist">#</a></h3>
-      <p>Tell us the addresses you call from and the key is restricted to them; a call from anywhere else is refused with <code>403</code> and a message saying so. The address checked is the one your request arrives from, so a proxy of your own is fine as long as its egress address is on the list.</p>
+      <p>A key can be locked to the addresses your servers call from. It is optional and off by default: a key with no list works from anywhere. Once a list is set, a call from any other address is refused — even with the right key — so a key that leaks is useless to whoever found it.</p>
+      <ul>
+        <li><strong>Per key.</strong> The list belongs to one key. Your live and test keys, or an old and a new key during a rotation, each have their own.</li>
+        <li><strong>What to send us.</strong> Email <a href="mailto:support@ansmusic.io?subject=Partner%20API%20IP%20allowlist">support@ansmusic.io</a> from your registered contact with the key's prefix (e.g. <code>ans_live_4f2c…</code>, never the whole key) and the public egress addresses of every server that calls us: single IPv4 or IPv6 addresses (<code>203.0.113.10</code>, <code>2001:db8::7</code>) or ranges in CIDR form (<code>198.51.100.0/24</code>, <code>2001:db8::/48</code>), up to 50 per key. Private addresses (<code>10.x</code>, <code>192.168.x</code>) are never what we see — send the address your traffic leaves your network from.</li>
+        <li><strong>Which address counts.</strong> The one your request reaches us from. A proxy or NAT gateway of your own is fine as long as its egress address is on the list. Headers such as <code>X-Forwarded-For</code> are not consulted.</li>
+        <li><strong>Before your address changes</strong> — a new server, a new cloud region, a new NAT gateway — send us the new address first, wait for our confirmation, then move. Calls from the new address are refused until it is on the list.</li>
+      </ul>
+      <p>A refused call answers <code>403</code> with <code>"code": "IP_NOT_ALLOWED"</code>. It does not say which addresses are allowed:</p>
+      <div class="code"><pre><code>{
+  <span class="k">"success"</span>: <span class="n">false</span>,
+  <span class="k">"code"</span>:    <span class="s">"IP_NOT_ALLOWED"</span>,
+  <span class="k">"message"</span>: <span class="s">"This API key cannot be used from this address. Ask ANS Music to add it."</span>,
+  <span class="k">"errorMessages"</span>: [ { <span class="k">"path"</span>: <span class="s">""</span>, <span class="k">"message"</span>: <span class="s">"This API key cannot be used from this address. Ask ANS Music to add it."</span> } ]
+}</code></pre></div>
+      <p class="muted small">Do not retry an <code>IP_NOT_ALLOWED</code> — it will not pass until the address is added. Write to us with the address you are calling from.</p>
 
       <div class="call warn">
         <p class="cap">Keep the key server-side</p>
@@ -1121,7 +1135,7 @@ handle(<span class="k">$evt</span>);</code></pre>
         <tbody>
           <tr><td class="num">400</td><td>Something in the request. The message says what.</td><td><em>Missing required fields: label, genre, channel · description is required · label cannot be emptied · The webhook URL must be https. · status must be one of: … · Nothing to change — send at least one field.</em></td></tr>
           <tr><td class="num">401</td><td>Key missing, wrong, or revoked.</td><td><em>API key is required · Invalid API key · This API key has been revoked.</em></td></tr>
-          <tr><td class="num">403</td><td>Key lacks the scope, is not permitted from this address, or is a live key on a test-only route.</td><td><em>This API key is not permitted from this address. · Only a test key can do this.</em></td></tr>
+          <tr><td class="num">403</td><td>Key lacks the scope, is called from an address not on its <a href="#ip-allowlist">allowlist</a> (<code>"code": "IP_NOT_ALLOWED"</code>), or is a live key on a test-only route.</td><td><em>This API key cannot be used from this address. Ask ANS Music to add it. · This API key is missing the release:write scope. · Only a test key can do this.</em></td></tr>
           <tr><td class="num">404</td><td>Not yours, or not there — including a release from the other environment.</td><td><em>Release not found · Test release not found</em></td></tr>
           <tr><td class="num">409</td><td>The request conflicts with what already exists.</td><td><em>You have already submitted ArtistNameVEVO. It is pending. · This release was rejected and cannot be edited… · This release already carries ISRC …</em></td></tr>
           <tr><td class="num">429</td><td>Too fast. See <a href="#rate-limits">rate limits</a>.</td><td><em>Too many requests. Slow down and try again shortly.</em></td></tr>
@@ -1187,6 +1201,12 @@ handle(<span class="k">$evt</span>);</code></pre>
       <h2><span class="num">13</span>Changelog</h2>
       <p class="lead">Fields are added, never removed or renamed. Anything that would break a working integration would be a new version on a new path.</p>
       <div class="log">
+        <div class="entry"><time>8 October 2026</time>
+          <ul>
+            <li><strong>Changed:</strong> the <a href="#ip-allowlist">IP allowlist</a> now takes IPv4 and IPv6 ranges in CIDR form as well as single addresses, up to 50 per key. A refused call answers <code>403</code> with <code>"code": "IP_NOT_ALLOWED"</code> and the message <em>This API key cannot be used from this address. Ask ANS Music to add it.</em></li>
+            <li>Nothing changes for a key without a list — it still works from anywhere.</li>
+          </ul>
+        </div>
         <div class="entry"><time>4 October 2026</time>
           <ul>
             <li><strong>New:</strong> <code>upc</code> on create and update, and <code>upc</code> / <code>upcAssignedByAns</code> on reads. Every video now gets its own UPC — yours if you send one, ours from approval otherwise — delivered to VEVO as the ICPN. See <a href="#upc">UPC</a>.</li>
